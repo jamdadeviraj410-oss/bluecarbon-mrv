@@ -26,6 +26,16 @@ import UploadMrvEvidencePage from '../features/mrv/pages/UploadMrvEvidencePage';
 import ProjectVerificationPage from '../features/mrv/pages/ProjectVerificationPage';
 import MrvVerificationWorkspacePage from '../features/mrv/pages/MrvVerificationWorkspacePage';
 
+// Blockchain & Carbon Credits Pages
+import {
+  BlockchainRecordsPage,
+  BlockchainRecordDetailPage,
+} from '../features/blockchain';
+import {
+  CarbonCreditsPage,
+  CarbonCreditDetailPage,
+} from '../features/carbonCredits';
+
 // Placeholder
 import Placeholder from '../pages/Placeholder';
 
@@ -52,6 +62,16 @@ export default function AppRoutes() {
         <Route path={ROUTES.ADMIN_MRV_WORKSPACE} element={<MrvVerificationWorkspacePage />} />
         <Route path={ROUTES.ADMIN_ORGANIZATIONS} element={<OrganizationsPage />} />
         <Route path={ROUTES.ADMIN_ORGANIZATION_DETAIL} element={<OrganizationsPage />} />
+        <Route path={ROUTES.ADMIN_CARBON_CREDITS} element={<CarbonCreditsPage />} />
+        <Route path={ROUTES.ADMIN_CARBON_CREDIT_DETAIL} element={<CarbonCreditDetailPage />} />
+        <Route path={ROUTES.ADMIN_BLOCKCHAIN} element={<BlockchainRecordsPage />} />
+        <Route path="/admin/blockchain/:id" element={<BlockchainRecordDetailPage />} />
+
+        {/* Direct / Shortcut Routes */}
+        <Route path="/carbon-credits" element={<CarbonCreditsPage />} />
+        <Route path="/carbon-credits/:id" element={<CarbonCreditDetailPage />} />
+        <Route path="/blockchain" element={<BlockchainRecordsPage />} />
+        <Route path="/blockchain/:id" element={<BlockchainRecordDetailPage />} />
         <Route path={ROUTES.ADMIN_CARBON_CREDITS} element={<Placeholder title="Carbon Credits" />} />
         <Route path={ROUTES.ADMIN_CARBON_CREDIT_DETAIL} element={<Placeholder title="Carbon Credit Details" />} />
         <Route path={ROUTES.ADMIN_BLOCKCHAIN} element={<Placeholder title="Blockchain Records" />} />
@@ -74,7 +94,7 @@ export default function AppRoutes() {
       <Route element={<PublicLayout />}>
         <Route path={ROUTES.PUBLIC_REGISTRY} element={<Placeholder title="Public Registry" />} />
         <Route path={ROUTES.PUBLIC_PROJECT_DETAIL} element={<Placeholder title="Public Project Details" />} />
-        <Route path={ROUTES.PUBLIC_CREDIT_DETAIL} element={<Placeholder title="Public Credit Details" />} />
+        <Route path={ROUTES.PUBLIC_CREDIT_DETAIL} element={<CarbonCreditDetailPage />} />
       </Route>
 
       {/* Status Page */}
