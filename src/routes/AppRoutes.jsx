@@ -14,6 +14,18 @@ import AccessRestricted from '../pages/auth/AccessRestricted';
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard';
 
+// Organization Pages
+import OrganizationsPage from '../features/organizations/pages/OrganizationsPage';
+
+// Project Pages
+import ProjectsPage from '../features/projects/pages/ProjectsPage';
+import ProjectDetailPage from '../features/projects/pages/ProjectDetailPage';
+import ProjectFormPage from '../features/projects/pages/ProjectFormPage';
+// MRV Pages
+import UploadMrvEvidencePage from '../features/mrv/pages/UploadMrvEvidencePage';
+import ProjectVerificationPage from '../features/mrv/pages/ProjectVerificationPage';
+import MrvVerificationWorkspacePage from '../features/mrv/pages/MrvVerificationWorkspacePage';
+
 // Placeholder
 import Placeholder from '../pages/Placeholder';
 
@@ -31,11 +43,15 @@ export default function AppRoutes() {
       {/* Admin Routes */}
       <Route element={<AdminLayout />}>
         <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
-        <Route path={ROUTES.ADMIN_PROJECTS} element={<Placeholder title="Projects" />} />
-        <Route path={ROUTES.ADMIN_PROJECT_DETAIL} element={<Placeholder title="Project Details" />} />
-        <Route path={ROUTES.ADMIN_MRV} element={<Placeholder title="MRV Reports" />} />
-        <Route path={ROUTES.ADMIN_MRV_DETAIL} element={<Placeholder title="MRV Details" />} />
-        <Route path={ROUTES.ADMIN_ORGANIZATIONS} element={<Placeholder title="Organizations" />} />
+        <Route path={ROUTES.ADMIN_PROJECTS} element={<ProjectsPage />} />
+        <Route path={ROUTES.ADMIN_PROJECT_NEW} element={<ProjectFormPage />} />
+        <Route path={ROUTES.ADMIN_PROJECT_DETAIL} element={<ProjectDetailPage />} />
+        <Route path={ROUTES.ADMIN_MRV} element={<Navigate to={ROUTES.ADMIN_MRV_WORKSPACE.replace(':projectId', 'PRJ-2023-089')} replace />} />
+        <Route path={ROUTES.ADMIN_MRV_UPLOAD} element={<UploadMrvEvidencePage />} />
+        <Route path={ROUTES.ADMIN_MRV_PROJECT_VERIFICATION} element={<ProjectVerificationPage />} />
+        <Route path={ROUTES.ADMIN_MRV_WORKSPACE} element={<MrvVerificationWorkspacePage />} />
+        <Route path={ROUTES.ADMIN_ORGANIZATIONS} element={<OrganizationsPage />} />
+        <Route path={ROUTES.ADMIN_ORGANIZATION_DETAIL} element={<OrganizationsPage />} />
         <Route path={ROUTES.ADMIN_CARBON_CREDITS} element={<Placeholder title="Carbon Credits" />} />
         <Route path={ROUTES.ADMIN_CARBON_CREDIT_DETAIL} element={<Placeholder title="Carbon Credit Details" />} />
         <Route path={ROUTES.ADMIN_BLOCKCHAIN} element={<Placeholder title="Blockchain Records" />} />
