@@ -45,6 +45,8 @@ import {
 // Placeholder
 import Placeholder from '../pages/Placeholder';
 
+import { SettingsPage } from '../features/settings';
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -84,7 +86,7 @@ export default function AppRoutes() {
 
         <Route path={ROUTES.ADMIN_AUDIT} element={<AuditTrailPage />} />
         <Route path="/admin/audit/:id" element={<AuditTrailDetailPage />} />
-        <Route path={ROUTES.ADMIN_SETTINGS} element={<Placeholder title="Settings" />} />
+        <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
       </Route>
 
       {/* Organization Routes */}
@@ -94,7 +96,7 @@ export default function AppRoutes() {
         <Route path={ROUTES.ORG_CREATE_PROJECT} element={<Placeholder title="Create Project" />} />
         <Route path={ROUTES.ORG_PROJECT_DETAIL} element={<Placeholder title="Project Details" />} />
         <Route path={ROUTES.ORG_UPLOAD_EVIDENCE} element={<Placeholder title="Upload Evidence" />} />
-        <Route path={ROUTES.ORG_SETTINGS} element={<Placeholder title="Settings" />} />
+        <Route path={ROUTES.ORG_SETTINGS} element={<SettingsPage />} />
       </Route>
 
       {/* Public Routes */}
