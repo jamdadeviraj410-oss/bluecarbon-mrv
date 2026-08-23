@@ -29,10 +29,13 @@ export default function Sidebar() {
   const adminLinks = [
     { icon: 'dashboard', label: 'Dashboard', to: ROUTES.ADMIN_DASHBOARD },
     { icon: 'forest', label: 'Projects', to: ROUTES.ADMIN_PROJECTS },
-    { icon: 'description', label: 'MRV Reports', to: ROUTES.ADMIN_MRV },
+    { icon: 'verified', label: 'MRV Verification', to: ROUTES.ADMIN_MRV_WORKSPACE.replace(':projectId', 'PRJ-2023-089'), basePath: '/mrv/workspace' },
+    { icon: 'upload_file', label: 'Evidence Upload', to: ROUTES.ADMIN_MRV_UPLOAD },
     { icon: 'corporate_fare', label: 'Organizations', to: ROUTES.ADMIN_ORGANIZATIONS },
     { icon: 'workspace_premium', label: 'Carbon Credits', to: ROUTES.ADMIN_CARBON_CREDITS },
-    { icon: 'link', label: 'Blockchain', to: ROUTES.ADMIN_BLOCKCHAIN },
+    { icon: 'link', label: 'Blockchain Registry', to: ROUTES.ADMIN_BLOCKCHAIN },
+    { icon: 'satellite_alt', label: 'Drone & Sensor Data', to: ROUTES.ADMIN_MRV_PROJECT_VERIFICATION.replace(':verificationId', 'M-78392-BD'), basePath: '/mrv/project-verification' },
+    { icon: 'assessment', label: 'Reports', to: ROUTES.ADMIN_REPORTS },
     { icon: 'history', label: 'Audit Trail', to: ROUTES.ADMIN_AUDIT },
     { icon: 'settings', label: 'Settings', to: ROUTES.ADMIN_SETTINGS },
   ];
@@ -66,7 +69,7 @@ export default function Sidebar() {
             icon={link.icon}
             label={link.label}
             to={link.to}
-            active={currentPath === link.to || currentPath.startsWith(link.to + '/')}
+            active={currentPath === link.to || currentPath.startsWith(link.to + '/') || (link.basePath && currentPath.startsWith(link.basePath))}
           />
         ))}
       </div>
