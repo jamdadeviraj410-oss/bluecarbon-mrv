@@ -35,6 +35,12 @@ import {
   CarbonCreditsPage,
   CarbonCreditDetailPage,
 } from '../features/carbonCredits';
+import { ReportsPage, ReportDetailPage } from '../features/reports';
+import { AuditTrailPage, AuditTrailDetailPage } from '../features/auditTrail';
+import {
+  PublicRegistryPage,
+  PublicRegistryDetailPage,
+} from '../features/publicRegistry';
 
 // Placeholder
 import Placeholder from '../pages/Placeholder';
@@ -72,11 +78,12 @@ export default function AppRoutes() {
         <Route path="/carbon-credits/:id" element={<CarbonCreditDetailPage />} />
         <Route path="/blockchain" element={<BlockchainRecordsPage />} />
         <Route path="/blockchain/:id" element={<BlockchainRecordDetailPage />} />
-        <Route path={ROUTES.ADMIN_CARBON_CREDITS} element={<Placeholder title="Carbon Credits" />} />
-        <Route path={ROUTES.ADMIN_CARBON_CREDIT_DETAIL} element={<Placeholder title="Carbon Credit Details" />} />
-        <Route path={ROUTES.ADMIN_BLOCKCHAIN} element={<Placeholder title="Blockchain Records" />} />
-        <Route path={ROUTES.ADMIN_REPORTS} element={<Placeholder title="Reports" />} />
-        <Route path={ROUTES.ADMIN_AUDIT} element={<Placeholder title="Audit Trail" />} />
+
+        <Route path={ROUTES.ADMIN_REPORTS} element={<ReportsPage />} />
+        <Route path="/admin/reports/:id" element={<ReportDetailPage />} />
+
+        <Route path={ROUTES.ADMIN_AUDIT} element={<AuditTrailPage />} />
+        <Route path="/admin/audit/:id" element={<AuditTrailDetailPage />} />
         <Route path={ROUTES.ADMIN_SETTINGS} element={<Placeholder title="Settings" />} />
       </Route>
 
@@ -92,8 +99,11 @@ export default function AppRoutes() {
 
       {/* Public Routes */}
       <Route element={<PublicLayout />}>
-        <Route path={ROUTES.PUBLIC_REGISTRY} element={<Placeholder title="Public Registry" />} />
-        <Route path={ROUTES.PUBLIC_PROJECT_DETAIL} element={<Placeholder title="Public Project Details" />} />
+        <Route path={ROUTES.PUBLIC_REGISTRY} element={<PublicRegistryPage />} />
+        <Route
+          path={ROUTES.PUBLIC_PROJECT_DETAIL}
+          element={<PublicRegistryDetailPage />}
+        />
         <Route path={ROUTES.PUBLIC_CREDIT_DETAIL} element={<CarbonCreditDetailPage />} />
       </Route>
 
