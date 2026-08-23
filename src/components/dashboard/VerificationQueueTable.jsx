@@ -73,10 +73,10 @@ export default function VerificationQueueTable({ queue }) {
         <h2 className="font-title-lg text-on-surface m-0">Verification Queue</h2>
         <div className="relative">
           <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-[18px] text-outline">search</span>
-          <input 
-            className="pl-[32px] pr-sm py-xs rounded-lg border border-outline-variant bg-surface font-body-md focus:outline-none focus:border-on-tertiary-container focus:ring-2 focus:ring-on-tertiary-container/20 transition-all" 
-            placeholder="Filter projects..." 
-            type="text" 
+          <input
+            className="pl-[32px] pr-sm py-xs rounded-lg border border-outline-variant bg-surface font-body-md focus:outline-none focus:border-on-tertiary-container focus:ring-2 focus:ring-on-tertiary-container/20 transition-all"
+            placeholder="Filter projects..."
+            type="text"
           />
         </div>
       </div>
@@ -96,7 +96,7 @@ export default function VerificationQueueTable({ queue }) {
           <tbody className="font-body-md text-on-surface divide-y divide-outline-variant/30">
             {queue.map(project => {
               const styles = getStatusStyles(project.status);
-              
+
               return (
                 <tr key={project.id} className="hover:bg-primary/5 transition-colors group">
                   <td className="p-md">

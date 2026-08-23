@@ -72,6 +72,9 @@ export default function AppRoutes() {
         <Route path="/carbon-credits/:id" element={<CarbonCreditDetailPage />} />
         <Route path="/blockchain" element={<BlockchainRecordsPage />} />
         <Route path="/blockchain/:id" element={<BlockchainRecordDetailPage />} />
+        <Route path={ROUTES.ADMIN_CARBON_CREDITS} element={<Placeholder title="Carbon Credits" />} />
+        <Route path={ROUTES.ADMIN_CARBON_CREDIT_DETAIL} element={<Placeholder title="Carbon Credit Details" />} />
+        <Route path={ROUTES.ADMIN_BLOCKCHAIN} element={<Placeholder title="Blockchain Records" />} />
         <Route path={ROUTES.ADMIN_REPORTS} element={<Placeholder title="Reports" />} />
         <Route path={ROUTES.ADMIN_AUDIT} element={<Placeholder title="Audit Trail" />} />
         <Route path={ROUTES.ADMIN_SETTINGS} element={<Placeholder title="Settings" />} />

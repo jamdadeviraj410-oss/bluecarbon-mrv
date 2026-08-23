@@ -14,8 +14,8 @@ export default function ProjectMap() {
       </div>
       <div className="relative w-full h-[500px]">
         {/* Pseudo Map */}
-        <div 
-          className="w-full h-full bg-cover bg-center" 
+        <div
+          className="w-full h-full bg-cover bg-center"
           title="India Coastline, Bay of Bengal"
           style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDFP2ZKxjWPZy2p8VQLUC-WABJ7EeqQ_3mxsXLua_dM6iXYAqdfwZ58Y5od3LoxfoCGjl9fAYvF44XKqF-ZMO2y_jiO2uo3ExfVkiOkUAwGMizsb2dapPELg8hCUMZvFzIzGyInWekFDkQvRR0yZzpnfPp0_e3fiv3oTu6R2TlYUREX6rbXB7kzfEiyPANNZVTBeSCME22eLl7svQCGTt7_pTQMgz-VoHQP1TbXM3Yon6gkMG7GLV27Iw')" }}
         ></div>
