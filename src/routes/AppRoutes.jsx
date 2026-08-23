@@ -10,6 +10,7 @@ import PublicLayout from '../components/layout/PublicLayout';
 import Login from '../pages/auth/Login';
 import ForgotPassword from '../pages/auth/ForgotPassword';
 import AccessRestricted from '../pages/auth/AccessRestricted';
+import StatusTransitionPage from '../pages/auth/StatusTransitionPage';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -41,6 +42,11 @@ import {
   PublicRegistryPage,
   PublicRegistryDetailPage,
 } from '../features/publicRegistry';
+
+import {
+  CommunityDashboardPage,
+  CommunityPortalPage,
+} from '../features/community';
 
 // Placeholder
 import Placeholder from '../pages/Placeholder';
@@ -99,6 +105,12 @@ export default function AppRoutes() {
         <Route path={ROUTES.ORG_SETTINGS} element={<SettingsPage />} />
       </Route>
 
+      {/* Community Routes */}
+      <Route element={<OrganizationLayout />}>
+        <Route path={ROUTES.COMMUNITY_DASHBOARD} element={<CommunityDashboardPage />} />
+        <Route path={ROUTES.COMMUNITY_PORTAL} element={<CommunityPortalPage />} />
+      </Route>
+
       {/* Public Routes */}
       <Route element={<PublicLayout />}>
         <Route path={ROUTES.PUBLIC_REGISTRY} element={<PublicRegistryPage />} />
@@ -110,7 +122,7 @@ export default function AppRoutes() {
       </Route>
 
       {/* Status Page */}
-      <Route path={ROUTES.STATUS} element={<Placeholder title="System Status" />} />
+      <Route path={ROUTES.STATUS} element={<StatusTransitionPage />} />
       
       {/* Catch-all */}
       <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />

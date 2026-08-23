@@ -146,7 +146,7 @@ export default function PublicRegistryPage() {
       </div>
 
       {/* Main Explorer Section */}
-      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-6 relative z-20 -mt-10 sm:-mt-12">
+      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-6 relative z-20">
         {/* Search & Filter Sidebar (Left, w-80 on lg) */}
         <aside className="w-full lg:w-80 flex-shrink-0 flex flex-col gap-5 bg-surface rounded-2xl shadow-lg p-5 sm:p-6 z-10 border border-outline-variant/60">
           <div className="flex flex-col gap-1">
@@ -576,45 +576,6 @@ export default function PublicRegistryPage() {
         </div>
       </div>
 
-      {/* Public Footer */}
-      <footer className="w-full bg-surface-container-low py-10 border-t border-outline-variant/60 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-start gap-8">
-          <div className="max-w-md flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary text-[24px]">water_ec</span>
-              <span className="font-title-md text-base font-bold text-primary">BlueCarbon Registry</span>
-            </div>
-            <p className="font-body-md text-xs text-on-surface-variant leading-relaxed m-0">
-              Ensuring technical precision and institutional trust in global blue carbon sequestration through blockchain-verified MRV frameworks.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8 text-xs">
-            <div className="flex flex-col gap-2">
-              <span className="font-label-md font-bold text-on-surface uppercase">Platform</span>
-              <a href="#verification" className="text-on-surface-variant hover:text-primary transition-colors">
-                Verification
-              </a>
-              <a href="#registry" className="text-on-surface-variant hover:text-primary transition-colors">
-                Registry Data
-              </a>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="font-label-md font-bold text-on-surface uppercase">Legal</span>
-              <a href="#methodology" className="text-on-surface-variant hover:text-primary transition-colors">
-                Methodology
-              </a>
-              <a href="#privacy" className="text-on-surface-variant hover:text-primary transition-colors">
-                Privacy Policy
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-6 border-t border-outline-variant/40 text-center font-label-md text-[11px] text-on-surface-variant">
-          © 2024 BlueCarbon MRV. All Technical Audit Trails Secured via Distributed Ledger Technology.
-        </div>
-      </footer>
     </div>
   );
 }

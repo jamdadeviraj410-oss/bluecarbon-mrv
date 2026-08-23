@@ -39,7 +39,8 @@ This report audits the currently completed BlueCarbon screens against the Google
 
 ## 6. Public Registry Module
 - **Screen/Page**: Public Registry Page (`/public`)
-- **Visible Problem**: Overlapping `z-index` and negative margins (`-mt-10 sm:-mt-12`) cause the main content container to obscure interactive elements below the hero section on specific responsive breakpoints.
+- **Status**: ✅ FIXED (Negative margins and duplicated footer removed)
+- **Previous Visible Problem**: Overlapping `z-index` and negative margins (`-mt-10 sm:-mt-12`) cause the main content container to obscure interactive elements below the hero section on specific responsive breakpoints.
 - **Expected Stitch Behavior**: Proper spacing strategy without relying heavily on negative margins for overlapping hero headers.
 - **Priority**: Medium
 - **Suggested File**: `src/features/publicRegistry/PublicRegistryPage.jsx` (Line 149)

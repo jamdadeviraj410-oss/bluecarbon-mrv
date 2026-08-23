@@ -65,6 +65,7 @@ export const ROUTES = {
   ORG_SETTINGS: '/organization/settings',
 
   COMMUNITY_DASHBOARD: '/community/dashboard',
+  COMMUNITY_PORTAL: '/community/portal',
 
   PUBLIC_REGISTRY: '/public',
   PUBLIC_PROJECT_DETAIL: '/public/projects/:id',
