@@ -1,22 +1,29 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../utils/constants';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle'); // idle, loading, success
+  const [errorMsg, setErrorMsg] = useState('');
+  const { resetPassword } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus('loading');
+    setErrorMsg('');
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await resetPassword(email);
       setStatus('success');
       setTimeout(() => {
         setStatus('idle');
-      }, 3000);
-    }, 1500);
+      }, 5000);
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to send password reset link');
+      setStatus('idle');
+    }
   };
 
   return (
@@ -39,6 +46,8 @@ export default function ForgotPassword() {
           <p className="font-body-md text-body-md text-on-surface-variant mb-8 text-center max-w-[384px] mx-auto">
             Enter your registered email address and we'll send you instructions to reset your password.
           </p>
+
+          {errorMsg && <p className="text-error font-body-md mb-4 text-center">{errorMsg}</p>}
 
           <form className="w-full flex flex-col gap-6 relative z-20" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-2 group/input">

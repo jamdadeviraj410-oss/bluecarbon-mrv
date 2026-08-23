@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getReportById, exportReportsCSV } from './reportsService';
+import { getReportById } from './reportsService';
 
 export default function ReportDetailPage() {
   const { id } = useParams();
@@ -45,7 +45,7 @@ ${(report.methodologies || []).map((m, i) => `${i + 1}. ${m}`).join('\n')}
 -----------------------------------------------------
 KEY FINDINGS & AUDIT NOTES
 -----------------------------------------------------
-${(report.keyFindings || []).map((k, i) => `• ${k}`).join('\n')}
+${(report.keyFindings || []).map((k) => `• ${k}`).join('\n')}
 
 -----------------------------------------------------
 END OF REPORT — SECURED VIA DISTRIBUTED LEDGER TECHNOLOGY

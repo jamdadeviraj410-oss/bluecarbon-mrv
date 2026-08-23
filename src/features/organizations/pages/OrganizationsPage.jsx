@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getOrganizations } from '../../../services/organizationService';
 import { mockOrganizations } from '../data/mockOrganizations';
 import OrganizationDetailDialog from '../components/OrganizationDetailDialog';
 
@@ -20,12 +21,37 @@ const StatusBadge = ({ status }) => {
 };
 
 const OrganizationsPage = () => {
+  const [organizationsList, setOrganizationsList] = useState(mockOrganizations);
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredOrgs = mockOrganizations.filter(org => 
+  useEffect(() => {
+    let isMounted = true;
+    async function loadOrgs() {
+      try {
+        const data = await getOrganizations();
+        if (isMounted && data && data.length > 0) {
+          setOrganizationsList(data);
+        }
+      } catch (err) {
+        console.error('Failed to load organizations from Supabase:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+    loadOrgs();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredOrgs = organizationsList.filter(org => 
     org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    org.type.toLowerCase().includes(searchQuery.toLowerCase())
+    (org.type && org.type.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (org.location && org.location.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
@@ -110,7 +136,7 @@ const OrganizationsPage = () => {
               {filteredOrgs.length === 0 && (
                 <tr>
                   <td colSpan="6" className="px-6 py-12 text-center text-on-surface-variant font-body-md">
-                    No organizations found matching your search.
+                    {isLoading ? 'Loading organizations...' : 'No organizations found matching your search.'}
                   </td>
                 </tr>
               )}
@@ -118,9 +144,9 @@ const OrganizationsPage = () => {
           </table>
         </div>
         
-        {/* Pagination placeholder */}
+        {/* Pagination */}
         <div className="px-6 py-4 border-t border-outline-variant/30 flex items-center justify-between bg-surface-container-lowest">
-          <span className="font-body-sm text-on-surface-variant">Showing 1 to {filteredOrgs.length} of {mockOrganizations.length} entries</span>
+          <span className="font-body-sm text-on-surface-variant">Showing 1 to {filteredOrgs.length} of {organizationsList.length} entries</span>
           <div className="flex gap-1">
             <button className="px-3 py-1 border border-outline-variant rounded hover:bg-surface-container text-on-surface transition-colors" disabled>Previous</button>
             <button className="px-3 py-1 bg-primary text-on-primary rounded transition-colors">1</button>

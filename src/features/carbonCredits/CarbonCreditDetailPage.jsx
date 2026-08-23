@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getCarbonCreditById } from './carbonCreditsService';
-import { formatNumber, truncateHash } from '../../utils/formatters';
+import { formatNumber } from '../../utils/formatters';
 
 export default function CarbonCreditDetailPage() {
   const { id } = useParams();

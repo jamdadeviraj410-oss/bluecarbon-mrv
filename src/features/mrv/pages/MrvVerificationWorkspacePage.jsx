@@ -1,9 +1,74 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { MRV_DATA } from '../data/mockMrv';
+import { getVerificationWorkspace, reviewVerification } from '../../../services/mrvService';
 
 export default function MrvVerificationWorkspacePage() {
+  const { projectId } = useParams();
   const [activeTab, setActiveTab] = useState('Overview');
-  const { workspace } = MRV_DATA;
+  const [actionSuccess, setActionSuccess] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [workspaceData, setWorkspaceData] = useState(MRV_DATA.workspace);
+  const [evidenceFiles, setEvidenceFiles] = useState([]);
+  const [verificationCase, setVerificationCase] = useState(null);
+
+  const activeProjectId = projectId || 'PRJ-2023-089';
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      try {
+        const data = await getVerificationWorkspace(activeProjectId);
+        if (isMounted && data) {
+          if (data.caseDetails) {
+            setVerificationCase(data.caseDetails);
+            setWorkspaceData((prev) => ({
+              ...prev,
+              id: activeProjectId,
+              status: data.caseDetails.status,
+              name: `Verification Workspace: ${activeProjectId}`,
+              verificationSummary: {
+                ...prev.verificationSummary,
+                confidenceScore: data.caseDetails.confidenceScore,
+                evidenceCompleteness: data.caseDetails.evidenceCompleteness,
+                estimatedYield: data.caseDetails.estimatedYield,
+                hash: data.caseDetails.hash,
+              },
+            }));
+          }
+          if (data.evidenceFiles && data.evidenceFiles.length > 0) {
+            setEvidenceFiles(data.evidenceFiles);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading MRV workspace:', err);
+      }
+    }
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, [activeProjectId]);
+
+  const handleDecision = async (decision) => {
+    if (!verificationCase?.dbId) return;
+    setIsProcessing(true);
+    try {
+      const updated = await reviewVerification(
+        verificationCase.dbId,
+        decision,
+        `Auditor ${decision} action from Verification Workspace`
+      );
+      setVerificationCase(updated);
+      setWorkspaceData((prev) => ({ ...prev, status: updated.status }));
+      setActionSuccess(`MRV decision '${decision}' successfully recorded!`);
+      setTimeout(() => setActionSuccess(''), 4000);
+    } catch (err) {
+      console.error('Failed to submit decision:', err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="flex-1 bg-gray-50 flex flex-col min-h-screen p-6 md:p-8">
@@ -12,26 +77,46 @@ export default function MrvVerificationWorkspacePage() {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3 mb-2">
             <span className="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-yellow-200 whitespace-nowrap">
-              {workspace.status}
+              {workspaceData.status}
             </span>
             <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-              Project ID: {workspace.id}
+              Project ID: {workspaceData.id}
             </span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 break-words">{workspace.name}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 break-words">{workspaceData.name}</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button className="bg-white border border-gray-300 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-50 transition-colors shadow-sm text-sm">
+          <button
+            onClick={() => handleDecision('REJECT')}
+            disabled={isProcessing}
+            className="bg-white border border-gray-300 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-50 transition-colors shadow-sm text-sm disabled:opacity-50"
+          >
             Reject
           </button>
-          <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm">
+          <button
+            onClick={() => handleDecision('REQUEST_CHANGES')}
+            disabled={isProcessing}
+            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm disabled:opacity-50"
+          >
             Request Clarification
           </button>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm text-sm">
+          <button
+            onClick={() => handleDecision('APPROVE')}
+            disabled={isProcessing}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm text-sm flex items-center gap-1 disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-[18px]">verified</span>
             Approve MRV
           </button>
         </div>
       </div>
+
+      {actionSuccess && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm flex items-center gap-2">
+          <span className="material-symbols-outlined text-[18px]">check_circle</span>
+          <span>{actionSuccess}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8 w-full max-w-[1440px]">
         {/* Left Sidebar: Map Layers & Stats */}
@@ -47,7 +132,7 @@ export default function MrvVerificationWorkspacePage() {
                 { name: 'Drone Survey', active: true },
                 { name: 'Ground Sensors', active: false, icon: 'sensors' },
                 { name: 'Historical Imagery', active: false },
-                { name: 'Carbon Sampling Points', active: false }
+                { name: 'Carbon Sampling Points', active: false },
               ].map((layer, idx) => (
                 <label key={idx} className="flex items-center gap-3 cursor-pointer group">
                   <input 
@@ -65,11 +150,11 @@ export default function MrvVerificationWorkspacePage() {
             <div className="p-5 border-t border-gray-200 bg-gray-50 grid grid-cols-2 gap-4">
               <div>
                 <span className="block text-xs font-semibold text-gray-500 uppercase mb-1">Total Area</span>
-                <span className="font-bold text-gray-900">{workspace.totalArea}</span>
+                <span className="font-bold text-gray-900">{workspaceData.totalArea}</span>
               </div>
               <div>
                 <span className="block text-xs font-semibold text-gray-500 uppercase mb-1">Sensor Status</span>
-                <span className="font-bold text-green-600">{workspace.sensorStatus}</span>
+                <span className="font-bold text-green-600">{workspaceData.sensorStatus}</span>
               </div>
             </div>
           </div>
@@ -95,156 +180,105 @@ export default function MrvVerificationWorkspacePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            
             {/* Main Data Area */}
             <div className="md:col-span-1 xl:col-span-2 flex flex-col gap-6">
-              {/* Drone Data Banner */}
-              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="flex-1 w-full grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <span className="block text-xs font-semibold text-gray-500 uppercase mb-1">Flight Date</span>
-                    <span className="text-sm font-bold text-gray-900">{workspace.droneData.flightDate}</span>
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                <h3 className="text-base font-bold text-gray-900 mb-4">Aerial & Drone Survey Analysis</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <span className="block text-xs text-gray-500 mb-1">Flight Date</span>
+                    <span className="font-semibold text-gray-900 text-sm">{workspaceData.droneData.flightDate}</span>
                   </div>
-                  <div>
-                    <span className="block text-xs font-semibold text-gray-500 uppercase mb-1">Resolution</span>
-                    <span className="text-sm font-bold text-gray-900">{workspace.droneData.resolution}</span>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <span className="block text-xs text-gray-500 mb-1">Resolution</span>
+                    <span className="font-semibold text-gray-900 text-sm">{workspaceData.droneData.resolution}</span>
                   </div>
-                  <div>
-                    <span className="block text-xs font-semibold text-gray-500 uppercase mb-1">Image Count</span>
-                    <span className="text-sm font-bold text-gray-900">{workspace.droneData.imageCount}</span>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <span className="block text-xs text-gray-500 mb-1">Captures</span>
+                    <span className="font-semibold text-gray-900 text-sm">{workspaceData.droneData.imageCount}</span>
                   </div>
-                  <div>
-                    <span className="block text-xs font-semibold text-gray-500 uppercase mb-1">Coverage</span>
-                    <span className="text-sm font-bold text-green-600">{workspace.droneData.coverage}</span>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <span className="block text-xs text-gray-500 mb-1">Coverage</span>
+                    <span className="font-semibold text-green-600 text-sm">{workspaceData.droneData.coverage}</span>
                   </div>
                 </div>
+
+                <div className="p-4 border border-blue-100 bg-blue-50/50 rounded-xl flex items-start gap-4">
+                  <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                    <span className="material-symbols-outlined">psychology</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-bold text-gray-900 text-sm">Computer Vision Canopy Check</h4>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Validated</span>
+                    </div>
+                    <p className="text-sm text-gray-600">{workspaceData.aiAnalysis.description}</p>
+                  </div>
+                </div>
+
+                {evidenceFiles.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-gray-100">
+                    <h4 className="text-sm font-bold text-gray-900 mb-3">Linked Evidence Files ({evidenceFiles.length})</h4>
+                    <div className="flex flex-col gap-2">
+                      {evidenceFiles.map((ef) => (
+                        <div key={ef.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-gray-500 text-[18px]">attachment</span>
+                            <span className="font-medium text-gray-800">{ef.name}</span>
+                          </div>
+                          <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">{ef.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Drone Evidence AI Analysis */}
-              <div className="bg-white p-6 border border-gray-200 rounded-xl shadow-sm">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Drone Evidence AI Analysis</h3>
-                <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-                  <div className="flex-1 bg-green-50 border border-green-200 rounded-lg p-5 flex items-start gap-4">
-                    <div className="bg-green-100 p-2 rounded-full text-green-600">
-                      <span className="material-symbols-outlined text-2xl">check_circle</span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-gray-900">{workspace.aiAnalysis.status}</span>
-                      </div>
-                      <p className="text-sm text-gray-600 leading-relaxed">
-                        {workspace.aiAnalysis.description}
+              {/* Audit trail */}
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                <h3 className="text-base font-bold text-gray-900 mb-4">Verification Audit Trail</h3>
+                <div className="relative pl-6 border-l-2 border-gray-200 flex flex-col gap-6 ml-2">
+                  {workspaceData.auditTrail.map((step, idx) => (
+                    <div key={idx} className="relative">
+                      <span className={`absolute -left-[31px] top-0 w-4 h-4 rounded-full border-2 bg-white ${
+                        step.status === 'completed' ? 'border-green-500 bg-green-500' : 'border-blue-500'
+                      }`}></span>
+                      <h4 className="text-sm font-semibold text-gray-900">{step.step}</h4>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {step.date && `${step.date} • `}{step.actor || step.assigner || step.status}
                       </p>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Images mock area */}
-                <div className="mt-6">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Multispectral Imagery (NDVI)</h4>
-                  <div className="flex flex-wrap gap-4">
-                    {['Sector B-14_NW', 'Sector B-14_NE', 'Sector B-14_SW'].map((img, i) => (
-                      <div key={i} className="w-32 h-24 bg-gray-200 rounded-lg overflow-hidden relative border border-gray-300">
-                        <div className="absolute inset-0 bg-blue-100 opacity-60"></div>
-                        <div className="absolute bottom-0 w-full bg-black/50 py-1 px-2">
-                          <span className="text-[10px] text-white truncate block">{img}</span>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="w-32 h-24 bg-gray-100 rounded-lg border border-dashed border-gray-300 flex items-center justify-center">
-                      <span className="text-xs font-medium text-gray-500">+447 more</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Audit Trail */}
-              <div className="bg-white p-6 border border-gray-200 rounded-xl shadow-sm">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Audit Trail</h3>
-                <div className="flex flex-col gap-4 relative">
-                  <div className="absolute left-2.5 top-2 bottom-2 w-0.5 bg-gray-200"></div>
-                  {workspace.auditTrail.map((step, idx) => (
-                    <div key={idx} className="flex gap-4 relative z-10">
-                      <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${
-                        step.status === 'completed' ? 'bg-green-500 text-white' : 
-                        step.status === 'In Review' ? 'bg-yellow-400 text-white' : 'bg-gray-300 text-transparent'
-                      }`}>
-                        <span className="material-symbols-outlined text-[12px]">
-                          {step.status === 'completed' ? 'check' : ''}
-                        </span>
-                      </div>
-                      <div className="flex-1 pb-4">
-                        <div className="flex justify-between items-start">
-                          <h4 className={`text-sm font-semibold ${step.status === 'Pending' ? 'text-gray-500' : 'text-gray-900'}`}>{step.step}</h4>
-                          {step.status !== 'completed' && (
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                              step.status === 'In Review' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'
-                            }`}>{step.status}</span>
-                          )}
-                        </div>
-                        {step.date && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {step.date} • {step.actor}
-                          </p>
-                        )}
-                        {step.assigner && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Assigner: {step.assigner}
-                          </p>
-                        )}
-                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Verification Summary Sidebar */}
+            {/* Right: Verification summary card */}
             <div className="md:col-span-1 xl:col-span-1 flex flex-col gap-6">
-              <div className="bg-gray-900 text-white border border-gray-800 rounded-xl shadow-md overflow-hidden flex flex-col">
-                <div className="p-5 border-b border-gray-700 bg-gray-800 flex items-center justify-between">
-                  <h3 className="text-base font-bold text-white">Verification Summary</h3>
-                  <span className="material-symbols-outlined text-blue-400">shield</span>
-                </div>
-                
-                <div className="p-6 flex flex-col gap-6">
-                  <div>
-                    <span className="block text-xs font-semibold text-gray-400 uppercase mb-1">Confidence Score</span>
-                    <span className="text-2xl font-bold text-green-400">{workspace.verificationSummary.confidenceScore}</span>
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                <h3 className="text-base font-bold text-gray-900 mb-4">Verification Summary</h3>
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                    <span className="text-sm text-gray-500">Confidence Score</span>
+                    <span className="text-base font-bold text-green-600">{workspaceData.verificationSummary.confidenceScore}</span>
                   </div>
-                  <div>
-                    <span className="block text-xs font-semibold text-gray-400 uppercase mb-1">Evidence Completeness</span>
-                    <span className="text-lg font-semibold text-white">{workspace.verificationSummary.evidenceCompleteness}</span>
+                  <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                    <span className="text-sm text-gray-500">Evidence Completeness</span>
+                    <span className="text-base font-bold text-gray-900">{workspaceData.verificationSummary.evidenceCompleteness}</span>
                   </div>
-                  <div>
-                    <span className="block text-xs font-semibold text-gray-400 uppercase mb-1">Estimated Yield</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-bold text-white">{workspace.verificationSummary.estimatedYield}</span>
-                      <span className="text-sm font-medium text-gray-400">tCO2e</span>
-                    </div>
+                  <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                    <span className="text-sm text-gray-500">Estimated Yield</span>
+                    <span className="text-base font-bold text-blue-600">{workspaceData.verificationSummary.estimatedYield} tCO2e</span>
                   </div>
-                </div>
-
-                <div className="p-5 border-t border-gray-700 bg-gray-800">
-                  <span className="block text-xs font-semibold text-gray-400 uppercase mb-2">Data Integrity</span>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="material-symbols-outlined text-green-400 text-sm">check_circle</span>
-                    <span className="text-sm font-medium text-gray-200">Blockchain Hash Verified</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Verification Hash</span>
+                    <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded truncate max-w-[120px]">
+                      {workspaceData.verificationSummary.hash}
+                    </span>
                   </div>
-                  <div className="bg-gray-900 text-gray-400 text-xs font-mono p-2 rounded truncate border border-gray-700">
-                    {workspace.verificationSummary.hash}
-                  </div>
-                </div>
-
-                <div className="p-5 bg-gray-800 pt-0">
-                  <button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 px-4 rounded-lg shadow-sm transition-colors flex justify-center items-center gap-2 text-sm mt-4">
-                    <span className="material-symbols-outlined text-[18px]">task_alt</span>
-                    Approve & Issue Carbon Credits
-                  </button>
                 </div>
               </div>
             </div>
-            
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { getProjectById, getProjects } from './projectsService';
 import StatusBadge from '../../components/common/StatusBadge';
 import { formatNumber, formatCarbon, formatArea, formatDate } from '../../utils/formatters';
@@ -7,7 +7,6 @@ import { ROUTES } from '../../utils/constants';
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Overview');
   const [showBlockchainModal, setShowBlockchainModal] = useState(false);
 

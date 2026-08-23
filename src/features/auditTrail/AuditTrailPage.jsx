@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import {
   mockAuditEntries,
   getAuditEntries,
@@ -364,7 +363,7 @@ export default function AuditTrailPage() {
             /* Timeline View */
             <div className="overflow-y-auto flex-1 p-6 flex flex-col gap-6">
               <div className="relative pl-6 sm:pl-8 border-l-2 border-outline-variant/60 ml-3 flex flex-col gap-8">
-                {paginatedEntries.map((entry, idx) => (
+                {paginatedEntries.map((entry) => (
                   <div
                     key={entry.id}
                     onClick={() => handleRowClick(entry)}

@@ -1,11 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import {
   reportKPIs,
-  carbonSequestrationTimeSeries,
   areaByStateData,
   projectStatusDistribution,
-  coastalProjectLocations,
   getGeneratedReports,
   generateNewReport,
   exportReportsCSV,
@@ -128,7 +125,7 @@ ${(report.methodologies || []).map((m, i) => `${i + 1}. ${m}`).join('\n')}
 -----------------------------------------------------
 KEY FINDINGS & AUDIT NOTES
 -----------------------------------------------------
-${(report.keyFindings || []).map((k, i) => `• ${k}`).join('\n')}
+${(report.keyFindings || []).map((k) => `• ${k}`).join('\n')}
 
 -----------------------------------------------------
 END OF REPORT — SECURED VIA DISTRIBUTED LEDGER TECHNOLOGY

@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getProjects } from '../../../services/projectService';
 import { mockProjects } from '../data/mockProjects';
 
 const StatusBadge = ({ status }) => {
@@ -9,6 +11,8 @@ const StatusBadge = ({ status }) => {
     colors = "bg-[#FFA000]/10 text-[#B47000]";
   } else if (status === "Rejected") {
     colors = "bg-[#D32F2F]/10 text-[#D32F2F]";
+  } else if (status === "Active") {
+    colors = "bg-[#2E7D32]/10 text-[#2E7D32]";
   }
 
   return (
@@ -19,11 +23,38 @@ const StatusBadge = ({ status }) => {
 };
 
 const ProjectsPage = () => {
+  const navigate = useNavigate();
+  const [projectsList, setProjectsList] = useState(mockProjects);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredProjects = mockProjects.filter(prj => 
+  useEffect(() => {
+    let isMounted = true;
+    async function loadProjects() {
+      try {
+        const data = await getProjects();
+        if (isMounted && data && data.length > 0) {
+          setProjectsList(data);
+        }
+      } catch (err) {
+        console.error('Failed to load projects from Supabase:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+    loadProjects();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredProjects = projectsList.filter(prj => 
     prj.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    prj.developer.toLowerCase().includes(searchQuery.toLowerCase())
+    (prj.organization && prj.organization.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (prj.developer && prj.developer.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (prj.type && prj.type.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
@@ -51,7 +82,10 @@ const ProjectsPage = () => {
             <span className="material-symbols-outlined text-[20px]">filter_list</span>
             Filter
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-title-sm hover:bg-primary-container transition-colors shadow-sm">
+          <button 
+            onClick={() => navigate('/projects/new')}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-title-sm hover:bg-primary-container transition-colors shadow-sm"
+          >
             <span className="material-symbols-outlined text-[20px]">add</span>
             New Project
           </button>
@@ -65,7 +99,7 @@ const ProjectsPage = () => {
               <tr className="bg-[#F1F5F9] border-b border-outline-variant/30">
                 <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Project</th>
                 <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Type & Location</th>
-                <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Developer</th>
+                <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Developer / Org</th>
                 <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Area</th>
                 <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
@@ -73,7 +107,11 @@ const ProjectsPage = () => {
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
               {filteredProjects.map((prj) => (
-                <tr key={prj.id} className="hover:bg-primary/5 transition-colors group cursor-pointer">
+                <tr 
+                  key={prj.id} 
+                  className="hover:bg-primary/5 transition-colors group cursor-pointer"
+                  onClick={() => navigate(`/projects/${prj.id}`)}
+                >
                   <td className="px-6 py-4">
                     <div className="font-title-md text-on-surface">{prj.name}</div>
                     <div className="font-mono-data text-outline text-[12px]">{prj.id}</div>
@@ -83,16 +121,20 @@ const ProjectsPage = () => {
                     <div className="font-body-sm text-on-surface-variant">{prj.location}</div>
                   </td>
                   <td className="px-6 py-4 font-body-md text-on-surface">
-                    {prj.developer}
+                    {prj.organization || prj.developer}
                   </td>
                   <td className="px-6 py-4 font-body-md text-on-surface">
-                    {prj.area}
+                    {prj.area ? `${prj.area} ha` : '—'}
                   </td>
                   <td className="px-6 py-4">
                     <StatusBadge status={prj.status} />
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/projects/${prj.id}`);
+                      }}
                       className="p-2 rounded-md hover:bg-surface-container text-primary transition-colors inline-flex items-center justify-center"
                       title="View Details"
                     >
@@ -104,7 +146,7 @@ const ProjectsPage = () => {
               {filteredProjects.length === 0 && (
                 <tr>
                   <td colSpan="6" className="px-6 py-12 text-center text-on-surface-variant font-body-md">
-                    No projects found matching your search.
+                    {isLoading ? 'Loading projects...' : 'No projects found matching your search.'}
                   </td>
                 </tr>
               )}
@@ -114,7 +156,7 @@ const ProjectsPage = () => {
         
         {/* Pagination placeholder */}
         <div className="px-6 py-4 border-t border-outline-variant/30 flex items-center justify-between bg-surface-container-lowest">
-          <span className="font-body-sm text-on-surface-variant">Showing 1 to {filteredProjects.length} of {mockProjects.length} entries</span>
+          <span className="font-body-sm text-on-surface-variant">Showing 1 to {filteredProjects.length} of {projectsList.length} entries</span>
           <div className="flex gap-1">
             <button className="px-3 py-1 border border-outline-variant rounded hover:bg-surface-container text-on-surface transition-colors" disabled>Previous</button>
             <button className="px-3 py-1 bg-primary text-on-primary rounded transition-colors">1</button>

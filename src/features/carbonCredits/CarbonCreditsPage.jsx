@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   getCarbonCredits,
   getCarbonCreditStats,
@@ -8,10 +8,9 @@ import {
   carbonCreditMethodologies,
 } from './carbonCreditsService';
 import StatusBadge from '../../components/common/StatusBadge';
-import { formatNumber, truncateHash } from '../../utils/formatters';
+import { formatNumber } from '../../utils/formatters';
 
 export default function CarbonCreditsPage() {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedMethodology, setSelectedMethodology] = useState('All');
@@ -26,6 +25,7 @@ export default function CarbonCreditsPage() {
   const [retirementSuccess, setRetirementSuccess] = useState(null);
   const [retireError, setRetireError] = useState('');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const stats = useMemo(() => getCarbonCreditStats(), [retirementSuccess]);
 
   const filteredCredits = useMemo(() => {
@@ -34,6 +34,7 @@ export default function CarbonCreditsPage() {
       status: selectedStatus,
       methodology: selectedMethodology,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, selectedStatus, selectedMethodology, retirementSuccess]);
 
   const totalPages = Math.ceil(filteredCredits.length / pageSize) || 1;
@@ -62,7 +63,7 @@ export default function CarbonCreditsPage() {
     setRetireError('');
   };
 
-  const handleConfirmRetire = (e) => {
+  const handleConfirmRetire = async (e) => {
     e.preventDefault();
     const amountNum = parseFloat(retireAmount);
     if (!amountNum || amountNum <= 0) {
@@ -78,18 +79,22 @@ export default function CarbonCreditsPage() {
       return;
     }
 
-    const result = retireCarbonCredit(
-      retireTargetCredit.id,
-      amountNum,
-      retireBeneficiary.trim(),
-      retireReason.trim()
-    );
+    try {
+      const result = await retireCarbonCredit(
+        retireTargetCredit.id,
+        amountNum,
+        retireBeneficiary.trim(),
+        retireReason.trim()
+      );
 
-    if (result.success) {
-      setRetirementSuccess(result);
-      setRetireTargetCredit(null);
-    } else {
-      setRetireError(result.message || 'Failed to retire credits.');
+      if (result.success) {
+        setRetirementSuccess(result);
+        setRetireTargetCredit(null);
+      } else {
+        setRetireError(result.message || 'Failed to retire credits.');
+      }
+    } catch (err) {
+      setRetireError(err.message || 'Failed to retire credits.');
     }
   };
 

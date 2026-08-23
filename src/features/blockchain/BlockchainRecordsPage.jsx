@@ -4,7 +4,6 @@ import {
   getBlockchainRecords,
   getBlockchainStats,
   exportBlockchainRegistryCSV,
-  blockchainNetworks,
 } from './blockchainService';
 import { truncateHash, formatNumber } from '../../utils/formatters';
 

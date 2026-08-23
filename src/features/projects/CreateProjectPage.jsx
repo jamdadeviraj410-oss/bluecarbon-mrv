@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createProject, projectTypes, indianStates } from './projectsService';
 import { ROUTES } from '../../utils/constants';
 
@@ -87,7 +87,6 @@ export default function CreateProjectPage() {
             {stepMeta.map((s, index) => {
               const isCompleted = s.num < currentStep;
               const isCurrent = s.num === currentStep;
-              const isFuture = s.num > currentStep;
 
               return (
                 <div

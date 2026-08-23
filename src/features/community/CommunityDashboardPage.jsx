@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 
 const MOCK_KPIS = [
   { label: 'Active Projects', value: '4', border: 'border-tertiary-fixed-dim' },

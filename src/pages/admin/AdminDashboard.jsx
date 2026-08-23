@@ -1,9 +1,14 @@
-
+import { useState, useEffect } from 'react';
 import { 
-  dashboardStats, 
-  recentActivity, 
-  verificationQueue 
+  dashboardStats as initialStats, 
+  recentActivity as initialActivity, 
+  verificationQueue as initialQueue 
 } from '../../data/dashboard';
+import { 
+  getDashboardStats, 
+  getRecentActivity, 
+  getVerificationQueue 
+} from '../../services/dashboardService';
 
 import StatCard from '../../components/dashboard/StatCard';
 import ProjectMap from '../../components/dashboard/ProjectMap';
@@ -12,6 +17,38 @@ import RecentActivity from '../../components/dashboard/RecentActivity';
 import VerificationQueueTable from '../../components/dashboard/VerificationQueueTable';
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState(initialStats);
+  const [activities, setActivities] = useState(initialActivity);
+  const [queue, setQueue] = useState(initialQueue);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDashboardData() {
+      try {
+        const [liveStats, liveActivity, liveQueue] = await Promise.all([
+          getDashboardStats(),
+          getRecentActivity(),
+          getVerificationQueue(),
+        ]);
+
+        if (isMounted) {
+          if (liveStats && liveStats.length > 0) setStats(liveStats);
+          if (liveActivity && liveActivity.length > 0) setActivities(liveActivity);
+          if (liveQueue && liveQueue.length > 0) setQueue(liveQueue);
+        }
+      } catch (err) {
+        console.error('Failed to load real dashboard data from Supabase:', err);
+      }
+    }
+
+    loadDashboardData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <div className="flex flex-col w-full px-xl py-lg gap-lg">
       {/* Header Section */}
@@ -35,7 +72,7 @@ export default function AdminDashboard() {
 
       {/* KPI Grid */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-md">
-        {dashboardStats.map((stat) => (
+        {stats.map((stat) => (
           <StatCard key={stat.id} {...stat} />
         ))}
       </section>
@@ -48,12 +85,12 @@ export default function AdminDashboard() {
         {/* Right Sidebar Analytics & Timeline */}
         <div className="lg:col-span-4 flex flex-col gap-lg">
           <SequestrationTrend />
-          <RecentActivity activities={recentActivity} />
+          <RecentActivity activities={activities} />
         </div>
       </div>
 
       {/* Verification Queue Table */}
-      <VerificationQueueTable queue={verificationQueue} />
+      <VerificationQueueTable queue={queue} />
     </div>
   );
 }

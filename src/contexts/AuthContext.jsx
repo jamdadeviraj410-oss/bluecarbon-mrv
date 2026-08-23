@@ -1,81 +1,162 @@
 /* eslint-disable react-refresh/only-export-components */
-/* eslint-disable no-unused-vars */
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ROLES } from '../utils/constants';
+import {
+  loginUser,
+  signUpUser,
+  logoutUser,
+  resetPassword as sendPasswordReset,
+  subscribeToAuthChanges,
+  getCurrentUser,
+  updateUserProfile,
+} from '../services/authService';
 
 const AuthContext = createContext(null);
 
-const MOCK_USERS = {
-  admin: {
-    id: 'usr-001',
-    name: 'Admin User',
-    email: 'admin@nccr.gov.in',
-    role: ROLES.NCCR_ADMIN,
-    organization: 'Registrar Office',
-    avatar: null,
-  },
-  ngo: {
-    id: 'usr-002',
-    name: 'Priya Sharma',
-    email: 'priya@ecotrust.org',
-    role: ROLES.NGO,
-    organization: 'EcoTrust India',
-    avatar: null,
-  },
-  panchayat: {
-    id: 'usr-003',
-    name: 'Ramesh Patil',
-    email: 'ramesh@ratnagiri.gov.in',
-    role: ROLES.PANCHAYAT,
-    organization: 'Ratnagiri Panchayat',
-    avatar: null,
-  },
-  community: {
-    id: 'usr-004',
-    name: 'Anita Deshpande',
-    email: 'anita@community.org',
-    role: ROLES.COMMUNITY,
-    organization: 'Sundarbans Community',
-    avatar: null,
-  },
-};
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [session, setSession] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = useCallback(async (email, _password) => {
-    setIsLoading(true);
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+  // Helper to format user object for app consumption
+  const formatAuthUser = (supabaseUser, profile) => {
+    if (!supabaseUser) return null;
 
-    // Match by email or default to admin
-    const matched = Object.values(MOCK_USERS).find(
-      (u) => u.email === email
-    );
-    const loggedInUser = matched || MOCK_USERS.admin;
-    setUser(loggedInUser);
-    setIsLoading(false);
-    return loggedInUser;
-  }, []);
+    const metadata = supabaseUser.user_metadata || {};
+    const role = profile?.role || metadata.role || ROLES.NCCR_ADMIN;
+    const orgName = profile?.organization?.name || metadata.organization || 'Registrar Office';
 
-  const logout = useCallback(() => {
-    setUser(null);
-  }, []);
+    return {
+      id: supabaseUser.id,
+      email: supabaseUser.email,
+      name: profile?.full_name || metadata.full_name || metadata.name || supabaseUser.email?.split('@')[0] || 'User',
+      role,
+      organization: orgName,
+      organizationId: profile?.organization_id || metadata.organization_id || null,
+      phone: profile?.phone || metadata.phone || null,
+      avatar: profile?.avatar_url || null,
+      profile,
+    };
+  };
 
-  const switchRole = useCallback((roleKey) => {
-    const mockUser = MOCK_USERS[roleKey];
-    if (mockUser) {
-      setUser(mockUser);
+  // Restore session on mount & subscribe to changes
+  useEffect(() => {
+    let isMounted = true;
+
+    async function initSession() {
+      try {
+        const current = await getCurrentUser();
+        if (isMounted && current) {
+          setUser(formatAuthUser(current, current.profile));
+        }
+      } catch (err) {
+        console.error('Session initialization error:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     }
+
+    initSession();
+
+    const { data: authListener } = subscribeToAuthChanges((_event, currentSession, profile) => {
+      if (!isMounted) return;
+
+      setSession(currentSession);
+      if (currentSession?.user) {
+        setUser(formatAuthUser(currentSession.user, profile));
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      authListener?.subscription?.unsubscribe();
+    };
+  }, []);
+
+  const login = useCallback(async (email, password) => {
+    setIsLoading(true);
+    try {
+      const { user: authUser, profile, session: authSession } = await loginUser(email, password);
+      const appUser = formatAuthUser(authUser, profile);
+      setUser(appUser);
+      setSession(authSession);
+      return appUser;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const signup = useCallback(async (data) => {
+    setIsLoading(true);
+    try {
+      const { user: authUser, profile, session: authSession } = await signUpUser(data);
+      const appUser = formatAuthUser(authUser, profile);
+      setUser(appUser);
+      setSession(authSession);
+      return appUser;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const logout = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await logoutUser();
+      setUser(null);
+      setSession(null);
+    } catch (err) {
+      console.error('Logout error:', err);
+      setUser(null);
+      setSession(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const resetPassword = useCallback(async (email) => {
+    return await sendPasswordReset(email);
+  }, []);
+
+  const updateProfile = useCallback(async (updates) => {
+    if (!user?.id) return;
+    const updatedProfile = await updateUserProfile(user.id, updates);
+    setUser((prev) => ({
+      ...prev,
+      name: updatedProfile.full_name || prev.name,
+      phone: updatedProfile.phone || prev.phone,
+      avatar: updatedProfile.avatar_url || prev.avatar,
+      profile: updatedProfile,
+    }));
+    return updatedProfile;
+  }, [user]);
+
+  // Role switch helper (updates user role in DB & state if authorized)
+  const switchRole = useCallback((roleKey) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        role: ROLES[roleKey] || roleKey,
+      };
+    });
   }, []);
 
   const value = {
     user,
+    session,
     isAuthenticated: !!user,
     isLoading,
     login,
+    signup,
     logout,
+    resetPassword,
+    updateProfile,
     switchRole,
   };
 
