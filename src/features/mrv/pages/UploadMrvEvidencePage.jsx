@@ -7,6 +7,8 @@ import {
   deleteEvidence,
   submitMrv,
 } from '../../../services/mrvService';
+import FieldEvidenceCaptureModal from '../components/FieldEvidenceCaptureModal';
+import { getOfflineQueue, syncOfflineEvidenceQueue } from '../../../services/offlineEvidenceService';
 
 export default function UploadMrvEvidencePage() {
   const { uploadEvidence: fallbackData } = MRV_DATA;
@@ -18,7 +20,30 @@ export default function UploadMrvEvidencePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+  const [offlineQueue, setOfflineQueue] = useState([]);
+  const [isSyncingOffline, setIsSyncingOffline] = useState(false);
   const fileInputRef = useRef(null);
+
+  const refreshOfflineQueue = () => {
+    setOfflineQueue(getOfflineQueue());
+  };
+
+  const handleSyncOffline = async () => {
+    setIsSyncingOffline(true);
+    try {
+      const res = await syncOfflineEvidenceQueue();
+      refreshOfflineQueue();
+      if (res.syncedCount > 0 && selectedProject) {
+        const files = await getEvidenceFiles(selectedProject.id);
+        if (files && files.length > 0) setEvidenceList(files);
+      }
+    } catch (err) {
+      console.error('Offline sync failed:', err);
+    } finally {
+      setIsSyncingOffline(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -248,7 +273,36 @@ export default function UploadMrvEvidencePage() {
         {/* Middle Column: Upload Area */}
         <div className="lg:col-span-1 flex flex-col gap-6">
           <div className="bg-white p-6 border border-gray-200 rounded-xl shadow-sm h-full flex flex-col">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Upload Files ({selectedType})</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-900">Upload Files ({selectedType})</h2>
+              <button
+                type="button"
+                onClick={() => setIsCameraModalOpen(true)}
+                className="px-3 py-1.5 bg-primary text-on-primary rounded-lg text-xs font-bold hover:bg-primary-container transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">photo_camera</span>
+                Camera & GPS
+              </button>
+            </div>
+
+            {/* Offline Queue Notice */}
+            {offlineQueue.length > 0 && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-800">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px] text-amber-600">cloud_off</span>
+                  <span>{offlineQueue.length} offline evidence item(s) pending sync</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSyncOffline}
+                  disabled={isSyncingOffline}
+                  className="px-2.5 py-1 bg-amber-600 text-white font-bold rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {isSyncingOffline ? 'Syncing...' : 'Sync Now'}
+                </button>
+              </div>
+            )}
+
             <input
               type="file"
               ref={fileInputRef}
@@ -387,6 +441,30 @@ export default function UploadMrvEvidencePage() {
           </div>
         </div>
       </div>
+
+      {/* Field Evidence Camera & GPS Geofence Modal */}
+      <FieldEvidenceCaptureModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        project={selectedProject}
+        onEvidenceSubmitted={(newItem) => {
+          setEvidenceList((prev) => [
+            {
+              id: newItem.id,
+              name: newItem.fileName,
+              originalFilename: newItem.fileName,
+              type: newItem.evidenceType,
+              size: `${(newItem.fileSize / 1024).toFixed(1)} KB`,
+              status: newItem.isOffline ? 'Offline Stored' : 'Validated',
+              sha256: newItem.sha256Hash,
+              gps: newItem.latitude && newItem.longitude ? `${newItem.latitude}, ${newItem.longitude}` : 'Manual',
+              locationStatus: newItem.locationValidationStatus,
+            },
+            ...prev,
+          ]);
+          refreshOfflineQueue();
+        }}
+      />
     </div>
   );
 }

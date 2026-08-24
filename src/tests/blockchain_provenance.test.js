@@ -1,0 +1,109 @@
+import crypto from 'node:crypto';
+import assert from 'node:assert';
+import fs from 'node:fs';
+import path from 'node:path';
+
+export function runBlockchainProvenanceTests() {
+  const testResults = [];
+
+  function recordTest(name, fn) {
+    try {
+      fn();
+      testResults.push({ name, passed: true });
+    } catch (err) {
+      testResults.push({ name, passed: false, error: err.message });
+    }
+  }
+
+  // 1. Canonicalization algorithm implementation
+  function canonicalize(value) {
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return `[${value.map(canonicalize).join(',')}]`;
+    const obj = value;
+    return `{${Object.keys(obj).sort().map((key) => `${JSON.stringify(key)}:${canonicalize(obj[key])}`).join(',')}}`;
+  }
+
+  function sha256Hex(input) {
+    return crypto.createHash('sha256').update(input, 'utf8').digest('hex');
+  }
+
+  // Test 1: Deterministic Canonical JSON
+  recordTest('Deterministic Canonical JSON (Key order independence)', () => {
+    const payloadA = {
+      submission: {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        code: 'MRV-2026-001',
+        project_id: 'PRJ-2023-089',
+        status: 'VERIFIED',
+        carbon_estimate: 1250.0,
+        claimed_metrics: { canopy_cover_percent: 85, biomass_density: 140 },
+        period_start: '2026-01-01',
+        period_end: '2026-06-30',
+        verified_at: '2026-08-14T10:00:00Z',
+      },
+      evidence: [
+        { id: '1', file_name: 'drone.las', file_type: 'las', file_size_bytes: 1048576, sha256_hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', validation_status: 'VALID' },
+      ],
+    };
+
+    const payloadB = {
+      evidence: [
+        { validation_status: 'VALID', sha256_hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', file_size_bytes: 1048576, file_type: 'las', file_name: 'drone.las', id: '1' },
+      ],
+      submission: {
+        verified_at: '2026-08-14T10:00:00Z',
+        period_end: '2026-06-30',
+        period_start: '2026-01-01',
+        claimed_metrics: { biomass_density: 140, canopy_cover_percent: 85 },
+        carbon_estimate: 1250.0,
+        status: 'VERIFIED',
+        project_id: 'PRJ-2023-089',
+        code: 'MRV-2026-001',
+        id: '123e4567-e89b-12d3-a456-426614174000',
+      },
+    };
+
+    const canonicalA = canonicalize(payloadA);
+    const canonicalB = canonicalize(payloadB);
+    assert.strictEqual(canonicalA, canonicalB, 'Canonical strings must match regardless of object property ordering');
+    const hashA = sha256Hex(canonicalA);
+    const hashB = sha256Hex(canonicalB);
+    assert.strictEqual(hashA, hashB, 'SHA-256 digests must match exactly');
+  });
+
+  // Test 2: Tamper Detection (Altered Carbon Estimate)
+  recordTest('Tamper Detection on altered carbon estimate', () => {
+    const payloadA = {
+      submission: { id: '1', carbon_estimate: 1250.0 },
+      evidence: [{ id: '1', sha256_hash: 'abc' }],
+    };
+    const hashA = sha256Hex(canonicalize(payloadA));
+    const tampered = JSON.parse(JSON.stringify(payloadA));
+    tampered.submission.carbon_estimate = 1250.01;
+    const hashTampered = sha256Hex(canonicalize(tampered));
+    assert.notStrictEqual(hashA, hashTampered, 'Tampered carbon estimate must produce different hash');
+  });
+
+  // Test 3: Solidity Contract Signatures
+  recordTest('Solidity contract signatures in BlueCarbonMRVAnchor.sol', () => {
+    const contractPath = path.resolve('contracts', 'BlueCarbonMRVAnchor.sol');
+    const contractSource = fs.readFileSync(contractPath, 'utf8');
+    assert(contractSource.includes('function anchorMRV('), 'Must contain anchorMRV');
+    assert(contractSource.includes('function verifyMRV('), 'Must contain verifyMRV');
+    assert(contractSource.includes('function getAnchor('), 'Must contain getAnchor');
+    assert(contractSource.includes('function isAnchored('), 'Must contain isAnchored');
+    assert(contractSource.includes('event MRVAnchored('), 'Must emit MRVAnchored event');
+  });
+
+  // Test 4: Edge functions integrity
+  recordTest('Edge functions existence & absence of fake generators', () => {
+    const anchorFnPath = path.resolve('supabase', 'functions', 'anchor-mrv', 'index.ts');
+    const verifyFnPath = path.resolve('supabase', 'functions', 'verify-mrv', 'index.ts');
+    assert(fs.existsSync(anchorFnPath), 'anchor-mrv index.ts must exist');
+    assert(fs.existsSync(verifyFnPath), 'verify-mrv index.ts must exist');
+    const anchorCode = fs.readFileSync(anchorFnPath, 'utf8');
+    assert(!anchorCode.includes('Math.random()'), 'anchor-mrv must not generate fake random hashes');
+  });
+
+  return testResults;
+}

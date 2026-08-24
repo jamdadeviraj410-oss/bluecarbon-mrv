@@ -2,7 +2,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { ethers } from 'https://esm.sh/ethers@6.15.0';
 
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
-const ABI = ['function getAnchor(bytes32) view returns (uint64 timestamp,uint64 blockNumber,uint256 carbonAmountCentiTonne,string recordId,bool exists)'];
+const ABI = [
+  'function getAnchor(bytes32) view returns (uint64 timestamp,uint64 blockNumber,uint256 carbonAmountCentiTonne,string recordId,bool exists)',
+  'function verifyMRV(bytes32 dataHash) view returns (bool exists,string recordId,uint256 carbonAmountCentiTonne,uint64 timestamp,uint64 blockNumber)',
+];
 
 const response = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
@@ -53,19 +56,22 @@ Deno.serve(async (req) => {
 
     const provider = new ethers.JsonRpcProvider(rpcUrl);
     const contract = new ethers.Contract(contractAddress, ABI, provider);
-    const onChain = await contract.getAnchor(`0x${dataHash}`);
-    const onChainRecordId = onChain[3];
-    const onChainExists = onChain[4];
-    const verified = Boolean(onChainExists) && onChainRecordId === submission.submission_code;
+    const onChain = await contract.verifyMRV(`0x${dataHash}`);
+    const onChainExists = Boolean(onChain[0]);
+    const onChainRecordId = onChain[1];
+    const onChainCarbonCentiTonne = Number(onChain[2] || 0);
+    const onChainTimestamp = Number(onChain[3] || 0);
+    const onChainBlockNumber = Number(onChain[4] || anchor.block_number || 0);
+    const verified = onChainExists && onChainRecordId === submission.submission_code;
 
     return response(200, {
       verified,
       dataHash,
       transactionHash: anchor.tx_hash,
-      blockNumber: Number(onChain[1] || anchor.block_number || 0),
-      timestamp: Number(onChain[0] || 0),
+      blockNumber: onChainBlockNumber,
+      timestamp: onChainTimestamp,
       recordId: onChainRecordId,
-      carbonAmount: Number(onChain[2] || 0) / 100,
+      carbonAmount: onChainCarbonCentiTonne / 100,
       explorerUrl: anchor.network?.explorer_url ? `${anchor.network.explorer_url}/tx/${anchor.tx_hash}` : null,
     });
   } catch (error) {

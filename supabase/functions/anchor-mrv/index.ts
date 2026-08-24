@@ -9,6 +9,7 @@ const corsHeaders = {
 const CONTRACT_ABI = [
   'function anchorMRV(bytes32 dataHash,string recordId,uint256 carbonAmountCentiTonne) returns (bool)',
   'function getAnchor(bytes32 dataHash) view returns (uint64 timestamp,uint64 blockNumber,uint256 carbonAmountCentiTonne,string recordId,bool exists)',
+  'function verifyMRV(bytes32 dataHash) view returns (bool exists,string recordId,uint256 carbonAmountCentiTonne,uint64 timestamp,uint64 blockNumber)',
   'function isAnchored(bytes32 dataHash) view returns (bool)',
 ];
 

@@ -29,6 +29,10 @@ import { ReportsPage, ReportDetailPage } from '../features/reports';
 import { AuditTrailPage, AuditTrailDetailPage } from '../features/auditTrail';
 import { PublicRegistryPage, PublicRegistryDetailPage, CreditDnaProvenancePage } from '../features/publicRegistry';
 import { CommunityDashboardPage, CommunityPortalPage } from '../features/community';
+import { OcrReviewWorkspace } from '../features/ocr';
+import { SensorRegistryView } from '../features/sensors';
+import { DroneBeforeAfterView } from '../features/drone';
+import { MrvIntelligenceDashboard, MrvAnomalyMatrix } from '../features/mrvIntelligence';
 import { SettingsPage } from '../features/settings';
 
 export default function AppRoutes() {
@@ -68,6 +72,16 @@ export default function AppRoutes() {
         <Route path="/carbon-credits/:id" element={<CarbonCreditDetailPage />} />
         <Route path="/blockchain" element={<BlockchainRecordsPage />} />
         <Route path="/blockchain/:id" element={<BlockchainRecordDetailPage />} />
+        <Route path={ROUTES.ADMIN_OCR_REVIEW} element={<OcrReviewWorkspace />} />
+        <Route path="/mrv/ocr" element={<OcrReviewWorkspace />} />
+        <Route path={ROUTES.ADMIN_SENSORS} element={<SensorRegistryView />} />
+        <Route path="/sensors" element={<SensorRegistryView />} />
+        <Route path={ROUTES.ADMIN_DRONE} element={<DroneBeforeAfterView />} />
+        <Route path="/drone" element={<DroneBeforeAfterView />} />
+        <Route path={ROUTES.ADMIN_MRV_INTELLIGENCE} element={<MrvIntelligenceDashboard />} />
+        <Route path="/mrv/intelligence" element={<MrvIntelligenceDashboard />} />
+        <Route path={ROUTES.ADMIN_MRV_ANOMALIES} element={<MrvAnomalyMatrix />} />
+        <Route path="/mrv/anomalies" element={<MrvAnomalyMatrix />} />
         <Route path={ROUTES.ADMIN_REPORTS} element={<ReportsPage />} />
         <Route path="/admin/reports/:id" element={<ReportDetailPage />} />
         <Route path={ROUTES.ADMIN_AUDIT} element={<AuditTrailPage />} />

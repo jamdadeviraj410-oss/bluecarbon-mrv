@@ -240,6 +240,23 @@ ALTER TABLE public.community_projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.community_activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;
 
+-- RLS role helper used by the reports management policy.
+CREATE OR REPLACE FUNCTION public.is_auditor()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1
+        FROM public.profiles
+        WHERE id = auth.uid()
+          AND role = 'AUDITOR'
+    );
+END;
+$$;
+
 CREATE POLICY "Audit Logs Read Policy" ON public.audit_logs
     FOR SELECT TO authenticated, anon USING (true);
 
