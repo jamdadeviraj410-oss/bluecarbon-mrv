@@ -94,7 +94,7 @@ export default function AppRoutes() {
       </Route>
 
       {/* Organization Portal Routes (NGO, Panchayat, Project Manager, NCCR_ADMIN) */}
-      <Route element={<RoleRoute allowedRoles={[ROLES.NGO, ROLES.PANCHAYAT, ROLES.PROJECT_MANAGER, ROLES.NCCR_ADMIN, 'ORG_ADMIN']}><OrganizationLayout /></RoleRoute>}>
+      <Route element={<RoleRoute allowedRoles={[ROLES.NGO, ROLES.PANCHAYAT, ROLES.PROJECT_MANAGER, ROLES.NCCR_ADMIN]}><OrganizationLayout /></RoleRoute>}>
         <Route path={ROUTES.ORG_DASHBOARD} element={<OrganizationDashboardPage />} />
         <Route path={ROUTES.ORG_PROJECTS} element={<OrganizationProjectsPage />} />
         <Route path={ROUTES.ORG_CREATE_PROJECT} element={<ProjectFormPage />} />
@@ -104,7 +104,7 @@ export default function AppRoutes() {
       </Route>
 
       {/* Community User Portal Routes (COMMUNITY, NCCR_ADMIN) */}
-      <Route element={<RoleRoute allowedRoles={[ROLES.COMMUNITY, ROLES.NCCR_ADMIN, 'COMMUNITY_USER']}><OrganizationLayout /></RoleRoute>}>
+      <Route element={<RoleRoute allowedRoles={[ROLES.COMMUNITY, ROLES.NCCR_ADMIN]}><OrganizationLayout /></RoleRoute>}>
         <Route path={ROUTES.COMMUNITY_DASHBOARD} element={<CommunityDashboardPage />} />
         <Route path={ROUTES.COMMUNITY_PORTAL} element={<CommunityPortalPage />} />
       </Route>

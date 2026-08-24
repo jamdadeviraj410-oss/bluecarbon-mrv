@@ -24,6 +24,7 @@ export async function runAuthRbacTests() {
     assert(!code.includes('https://rmiyueszxpsfyzvjehdx.supabase.co'), 'supabase.js must not contain hardcoded project URLs');
     assert(code.includes('VITE_SUPABASE_URL'), 'supabase.js must reference VITE_SUPABASE_URL');
     assert(code.includes('VITE_SUPABASE_ANON_KEY'), 'supabase.js must reference VITE_SUPABASE_ANON_KEY');
+    assert(code.includes('throw new Error'), 'supabase.js must throw if env vars are missing');
   });
 
   // 2. Canonical Roles definition
@@ -97,6 +98,44 @@ export async function runAuthRbacTests() {
     const rolePath = path.resolve('src', 'components', 'auth', 'RoleRoute.jsx');
     assert(fs.existsSync(protectedPath), 'ProtectedRoute.jsx must exist');
     assert(fs.existsSync(rolePath), 'RoleRoute.jsx must exist');
+  });
+
+  // 9. Public Signup removes role escalation
+  await recordTest('Security: Signup.jsx does not allow users to choose elevated roles', () => {
+    const signupPath = path.resolve('src', 'pages', 'auth', 'Signup.jsx');
+    const code = fs.readFileSync(signupPath, 'utf8');
+    assert(!code.includes('<select'), 'Signup.jsx must not contain a role selector dropdown');
+    assert(code.includes('ROLES.COMMUNITY'), 'Signup.jsx must default to COMMUNITY role');
+    assert(code.includes('organizationId: null'), 'Signup.jsx must set organizationId to null');
+  });
+
+  // 10. Database Anti-Escalation Triggers
+  await recordTest('Database: Migration 16 prevents self-role/org modification', () => {
+    const migPath = path.resolve('supabase', 'migrations', '202608240016_unify_roles_and_auth_trigger.sql');
+    const sql = fs.readFileSync(migPath, 'utf8');
+    assert(sql.includes('prevent_self_role_escalation'), 'Must contain prevent_self_role_escalation trigger function');
+    assert(sql.includes('trg_prevent_self_role_escalation'), 'Must bind trigger on public.profiles');
+  });
+
+  // 11. Controlled Onboarding Status RPC & No Public Table SELECT
+  await recordTest('Database: Migration 16 contains get_onboarding_status RPC and removes public SELECT policy', () => {
+    const migPath = path.resolve('supabase', 'migrations', '202608240016_unify_roles_and_auth_trigger.sql');
+    const sql = fs.readFileSync(migPath, 'utf8');
+    assert(sql.includes('get_onboarding_status'), 'Must define get_onboarding_status RPC');
+    assert(sql.includes('DROP POLICY IF EXISTS "Public can view application status"'), 'Must drop public select policy on onboarding_requests');
+  });
+
+  // 12. Canonical Roles in Active Route Guards
+  await recordTest('RBAC: Route guards do not accept legacy roles', () => {
+    const routesPath = path.resolve('src', 'routes', 'AppRoutes.jsx');
+    const code = fs.readFileSync(routesPath, 'utf8');
+    assert(!code.includes("'ORG_ADMIN'"), 'AppRoutes must not contain ORG_ADMIN');
+    assert(!code.includes("'COMMUNITY_USER'"), 'AppRoutes must not contain COMMUNITY_USER');
+
+    const layoutPath = path.resolve('src', 'components', 'layout', 'OrganizationLayout.jsx');
+    const layoutCode = fs.readFileSync(layoutPath, 'utf8');
+    assert(!layoutCode.includes("'ORG_ADMIN'"), 'OrganizationLayout must not contain ORG_ADMIN');
+    assert(!layoutCode.includes("'COMMUNITY_USER'"), 'OrganizationLayout must not contain COMMUNITY_USER');
   });
 
   return testResults;

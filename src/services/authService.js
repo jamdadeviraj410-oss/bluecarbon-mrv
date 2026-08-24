@@ -54,15 +54,15 @@ export async function loginUser(email, password) {
   };
 }
 
-export async function signUpUser({ email, password, fullName, role = 'COMMUNITY', organizationId = null, phone = null }) {
+export async function signUpUser({ email, password, fullName, phone = null }) {
   const { data, error } = await supabase.auth.signUp({
     email: email.trim(),
     password,
     options: {
       data: {
         full_name: fullName.trim(),
-        role,
-        organization_id: organizationId,
+        role: 'COMMUNITY',
+        organization_id: null,
         phone: phone ? phone.trim() : null,
       },
     },
@@ -144,9 +144,15 @@ export async function getUserProfile(userId) {
 }
 
 export async function updateUserProfile(userId, updates) {
+  // Security Whitelist: Users may only update their personal profile info, never role or org
+  const safeUpdates = {};
+  if (updates.full_name !== undefined) safeUpdates.full_name = updates.full_name;
+  if (updates.phone !== undefined) safeUpdates.phone = updates.phone;
+  if (updates.avatar_url !== undefined) safeUpdates.avatar_url = updates.avatar_url;
+
   const { data, error } = await supabase
     .from('profiles')
-    .update(updates)
+    .update(safeUpdates)
     .eq('id', userId)
     .select()
     .single();

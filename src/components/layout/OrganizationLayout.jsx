@@ -20,9 +20,6 @@ export default function OrganizationLayout() {
     ROLES.COMMUNITY,
     ROLES.PROJECT_MANAGER,
     ROLES.NCCR_ADMIN,
-    'ORG_ADMIN',
-    'COMMUNITY_USER',
-    'DEVELOPER',
   ];
 
   if (!allowedRoles.includes(user.role)) {

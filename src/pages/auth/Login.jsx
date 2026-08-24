@@ -37,11 +37,11 @@ export default function Login() {
       // Route strictly based on verified user role
       if (user.role === ROLES.NCCR_ADMIN) {
         navigate(ROUTES.ADMIN_DASHBOARD);
-      } else if (user.role === ROLES.VERIFIER || user.role === 'AUDITOR') {
+      } else if (user.role === ROLES.VERIFIER) {
         navigate(ROUTES.ADMIN_MRV_PROJECT_VERIFICATION.replace(':verificationId', 'VRF-2026-001'));
-      } else if (user.role === ROLES.NGO || user.role === ROLES.PANCHAYAT || user.role === ROLES.PROJECT_MANAGER || user.role === 'ORG_ADMIN') {
+      } else if (user.role === ROLES.NGO || user.role === ROLES.PANCHAYAT || user.role === ROLES.PROJECT_MANAGER) {
         navigate(ROUTES.ORG_DASHBOARD);
-      } else if (user.role === ROLES.COMMUNITY || user.role === 'COMMUNITY_USER') {
+      } else if (user.role === ROLES.COMMUNITY) {
         navigate(ROUTES.COMMUNITY_DASHBOARD);
       } else {
         navigate(ROUTES.ACCESS_RESTRICTED);

@@ -7,7 +7,6 @@ export default function Signup() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState(ROLES.COMMUNITY);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -45,27 +44,20 @@ export default function Signup() {
     if (!handleValidation()) return;
 
     try {
+      // Security: Public self-registration always defaults to COMMUNITY role and null organization
       const res = await signup({
         email: email.trim(),
         password,
         fullName: fullName.trim(),
-        role,
+        role: ROLES.COMMUNITY,
+        organizationId: null,
         phone: phone.trim() || null,
       });
 
       if (res.requiresConfirmation) {
         setEmailSent(true);
       } else if (res.user) {
-        // Immediate session active
-        if (res.user.role === ROLES.NCCR_ADMIN) {
-          navigate(ROUTES.ADMIN_DASHBOARD);
-        } else if (res.user.role === ROLES.VERIFIER) {
-          navigate(ROUTES.ADMIN_MRV_PROJECT_VERIFICATION.replace(':verificationId', 'VRF-2026-001'));
-        } else if (res.user.role === ROLES.NGO || res.user.role === ROLES.PANCHAYAT || res.user.role === ROLES.PROJECT_MANAGER) {
-          navigate(ROUTES.ORG_DASHBOARD);
-        } else {
-          navigate(ROUTES.COMMUNITY_DASHBOARD);
-        }
+        navigate(ROUTES.COMMUNITY_DASHBOARD);
       }
     } catch (err) {
       setError(err.message || 'Unable to create account. Please try again.');
@@ -86,9 +78,9 @@ export default function Signup() {
         </div>
         <div className="relative z-10 flex flex-col justify-end p-12 lg:p-24 h-full text-on-primary max-w-2xl">
           <div className="mb-8">
-            <span className="inline-block px-3 py-1 mb-4 rounded-full bg-primary-container text-on-primary-container font-label-md uppercase tracking-wider">Account Registration</span>
+            <span className="inline-block px-3 py-1 mb-4 rounded-full bg-primary-container text-on-primary-container font-label-md uppercase tracking-wider">Community Registration</span>
             <h1 className="font-display-lg text-on-primary mb-6 leading-tight">Empowering Coastal Restoration.</h1>
-            <p className="font-body-lg text-on-primary/80 max-w-[512px]">Join the national blue carbon infrastructure to register restoration projects, upload sensor data, and tokenize verified credits.</p>
+            <p className="font-body-lg text-on-primary/80 max-w-[512px]">Join the national blue carbon infrastructure to participate in community monitoring, upload field evidence, and view transparent registry data.</p>
           </div>
           <div className="grid grid-cols-2 gap-8 mt-12 border-t border-on-primary/20 pt-12">
             <div>
@@ -107,12 +99,12 @@ export default function Signup() {
       <div className="flex flex-col justify-center w-full lg:w-1/2 p-8 sm:p-12 lg:p-20 bg-surface relative overflow-y-auto">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-fixed-dim/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
         
-        <div className="w-full max-w-[480px] mx-auto relative z-10 py-6">
+        <div className="w-full max-w-[440px] mx-auto relative z-10 py-6">
           {/* Logo */}
           <div className="mb-6 text-center lg:text-left">
             <img alt="BlueCarbon MRV Registry Logo" className="h-14 w-auto mb-4 mx-auto lg:mx-0 object-contain drop-shadow-sm" src="https://lh3.googleusercontent.com/aida/AEtjO1VW17fNGVMtPR23qYyffLAVoeuR5Kdj9tUp6MT_5V8XfzIDrHbzRM0w4PQKao_zH8sPwHYenPV-Jk0xV6OTTfahEdaecImu4vFWpKKvMTLzgxJcizYNc3V9LNKyURj8rSEiORjN6gv5kMJl4-b38UctUSP2ENOzee6PP9s7MFtDKB2fDGiOFf1-ioktRKCW2MLcv19djw8fd54LKOVv0ZW-P6PUX-kHqOjDZj3hZuhUuDgD2_B3JtzI4OU-"/>
             <h2 className="font-headline-lg text-on-surface mb-1">Create an Account</h2>
-            <p className="font-body-lg text-on-surface-variant text-sm">Join the National Blue Carbon MRV Registry</p>
+            <p className="font-body-lg text-on-surface-variant text-sm">Register as a Community Contributor</p>
           </div>
 
           {emailSent ? (
@@ -152,7 +144,7 @@ export default function Signup() {
                       className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-tertiary-container focus:ring-2 focus:ring-tertiary-container/20 transition-all shadow-sm text-sm" 
                       id="fullName" 
                       name="fullName" 
-                      placeholder="e.g. Dr. Rajesh Kumar" 
+                      placeholder="e.g. Ramesh Chandra" 
                       required 
                       type="text"
                       value={fullName}
@@ -162,14 +154,14 @@ export default function Signup() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block font-label-md text-on-surface text-xs font-semibold" htmlFor="email">Official Email Address</label>
+                  <label className="block font-label-md text-on-surface text-xs font-semibold" htmlFor="email">Email Address</label>
                   <div className="relative">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">mail</span>
                     <input 
                       className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-tertiary-container focus:ring-2 focus:ring-tertiary-container/20 transition-all shadow-sm text-sm" 
                       id="email" 
                       name="email" 
-                      placeholder="name@organization.org" 
+                      placeholder="name@example.com" 
                       required 
                       type="email"
                       value={email}
@@ -178,37 +170,19 @@ export default function Signup() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="block font-label-md text-on-surface text-xs font-semibold" htmlFor="role">Account Role</label>
-                    <select
-                      id="role"
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md text-on-surface focus:outline-none focus:border-tertiary-container focus:ring-2 focus:ring-tertiary-container/20 transition-all shadow-sm text-sm"
-                    >
-                      <option value={ROLES.COMMUNITY}>Community Contributor</option>
-                      <option value={ROLES.NGO}>NGO Representative</option>
-                      <option value={ROLES.PANCHAYAT}>Panchayat Officer</option>
-                      <option value={ROLES.PROJECT_MANAGER}>Project Manager</option>
-                      <option value={ROLES.VERIFIER}>Independent Verifier</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="block font-label-md text-on-surface text-xs font-semibold" htmlFor="phone">Phone (Optional)</label>
-                    <div className="relative">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">call</span>
-                      <input 
-                        className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-tertiary-container focus:ring-2 focus:ring-tertiary-container/20 transition-all shadow-sm text-sm" 
-                        id="phone" 
-                        name="phone" 
-                        placeholder="+91 98765 43210" 
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                      />
-                    </div>
+                <div className="space-y-1.5">
+                  <label className="block font-label-md text-on-surface text-xs font-semibold" htmlFor="phone">Phone (Optional)</label>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">call</span>
+                    <input 
+                      className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-tertiary-container focus:ring-2 focus:ring-tertiary-container/20 transition-all shadow-sm text-sm" 
+                      id="phone" 
+                      name="phone" 
+                      placeholder="+91 98765 43210" 
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
                   </div>
                 </div>
 
@@ -272,11 +246,17 @@ export default function Signup() {
                 </button>
               </form>
 
-              <div className="mt-6 pt-4 border-t border-outline-variant/30 text-center">
+              <div className="mt-6 pt-4 border-t border-outline-variant/30 text-center space-y-2">
                 <p className="font-body-md text-on-surface-variant text-sm">
                   Already registered?{' '}
                   <Link className="font-title-md text-primary hover:underline font-bold" to={ROUTES.LOGIN}>
                     Sign In
+                  </Link>
+                </p>
+                <p className="font-body-md text-on-surface-variant text-xs">
+                  Representing an NGO or Panchayat?{' '}
+                  <Link className="font-title-md text-primary hover:underline font-semibold" to={ROUTES.ONBOARDING}>
+                    Apply for Onboarding
                   </Link>
                 </p>
               </div>

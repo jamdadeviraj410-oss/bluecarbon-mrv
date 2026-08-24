@@ -48,9 +48,24 @@ export async function submitOnboardingRequest(formData) {
 }
 
 export async function getOnboardingRequestByNumber(applicationNumber) {
+  if (!applicationNumber) return null;
+
+  // 1. Query via controlled secure RPC
+  try {
+    const { data: rpcData, error: rpcError } = await supabase
+      .rpc('get_onboarding_status', { p_application_number: applicationNumber.trim() });
+
+    if (!rpcError && rpcData) {
+      return rpcData;
+    }
+  } catch (err) {
+    console.warn('get_onboarding_status RPC query attempt:', err);
+  }
+
+  // 2. Query sanitized fields governed by RLS
   const { data, error } = await supabase
     .from('onboarding_requests')
-    .select('*')
+    .select('application_number, organization_name, organization_type, state, district, status, review_notes, created_at, updated_at')
     .eq('application_number', applicationNumber.trim())
     .maybeSingle();
 

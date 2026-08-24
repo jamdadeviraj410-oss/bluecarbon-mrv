@@ -1,7 +1,7 @@
 -- Migration 16: Role System Unification, Auth User Trigger, and RLS Hardening
--- Safe, non-destructive migration ensuring strict RBAC and profile integrity
+-- Safe, non-destructive migration ensuring strict RBAC, anti-escalation triggers, and profile integrity
 
--- 1. Harmonize Role Check Constraint on Profiles
+-- 1. Harmonize Role Check Constraint on Profiles (Canonical Vocabulary)
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
 ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check 
     CHECK (role IN (
@@ -10,39 +10,22 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check
         'NGO',
         'PANCHAYAT',
         'COMMUNITY',
-        'PROJECT_MANAGER',
-        'ORG_ADMIN',
-        'FIELD_OFFICER',
-        'AUDITOR',
-        'BUYER',
-        'COMMUNITY_USER'
+        'PROJECT_MANAGER'
     ));
 
 ALTER TABLE public.profiles ALTER COLUMN role SET DEFAULT 'COMMUNITY';
 
--- 2. Automatic Profile Provisioning Trigger on auth.users
+-- 2. Automatic Profile Provisioning Trigger on auth.users (Strict Non-Escalation)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_role TEXT;
     v_full_name TEXT;
-    v_org_id UUID;
     v_phone TEXT;
 BEGIN
-    -- Extract desired role from signup metadata
-    v_role := COALESCE(NEW.raw_user_meta_data->>'role', 'COMMUNITY');
+    -- Security Guard: All public self-signups strictly default to COMMUNITY role
+    -- Organization and Verifier roles MUST be provisioned via onboarding approval or admin provisioning
 
-    -- Security Guard: Disallow self-assigned NCCR_ADMIN through public signup
-    IF v_role = 'NCCR_ADMIN' THEN
-        v_role := 'COMMUNITY';
-    END IF;
-
-    -- Validate role exists in allowed list
-    IF v_role NOT IN ('NCCR_ADMIN', 'VERIFIER', 'NGO', 'PANCHAYAT', 'COMMUNITY', 'PROJECT_MANAGER', 'ORG_ADMIN', 'FIELD_OFFICER', 'AUDITOR', 'BUYER', 'COMMUNITY_USER') THEN
-        v_role := 'COMMUNITY';
-    END IF;
-
-    -- Extract name & metadata
+    -- Extract name & metadata safely
     v_full_name := COALESCE(
         NULLIF(NEW.raw_user_meta_data->>'full_name', ''),
         NULLIF(NEW.raw_user_meta_data->>'name', ''),
@@ -50,14 +33,8 @@ BEGIN
         'User'
     );
     v_phone := NEW.raw_user_meta_data->>'phone';
-    
-    BEGIN
-        v_org_id := (NEW.raw_user_meta_data->>'organization_id')::UUID;
-    EXCEPTION WHEN OTHERS THEN
-        v_org_id := NULL;
-    END;
 
-    -- Upsert profile with matching auth user ID
+    -- Upsert profile with matching auth user ID, role=COMMUNITY, organization_id=NULL
     INSERT INTO public.profiles (
         id,
         email,
@@ -73,8 +50,8 @@ BEGIN
         NEW.id,
         NEW.email,
         v_full_name,
-        v_role,
-        v_org_id,
+        'COMMUNITY',
+        NULL,
         v_phone,
         true,
         now(),
@@ -96,7 +73,40 @@ CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 3. Hardened RLS Policies for Profiles
+-- 3. Prevent Self-Role, Organization, and Status Modification at Database Level
+CREATE OR REPLACE FUNCTION public.prevent_self_role_escalation()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- NCCR Admins have privilege to manage profiles and roles
+    IF public.is_nccr_admin() THEN
+        RETURN NEW;
+    END IF;
+
+    -- Non-admin users cannot alter their own role
+    IF NEW.role IS DISTINCT FROM OLD.role THEN
+        RAISE EXCEPTION 'Unauthorized: Users cannot modify their assigned role.';
+    END IF;
+
+    -- Non-admin users cannot alter their organization association
+    IF NEW.organization_id IS DISTINCT FROM OLD.organization_id THEN
+        RAISE EXCEPTION 'Unauthorized: Users cannot modify their organization association.';
+    END IF;
+
+    -- Non-admin users cannot alter active status
+    IF NEW.is_active IS DISTINCT FROM OLD.is_active THEN
+        RAISE EXCEPTION 'Unauthorized: Users cannot modify account active status.';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_prevent_self_role_escalation ON public.profiles;
+CREATE TRIGGER trg_prevent_self_role_escalation
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW EXECUTE FUNCTION public.prevent_self_role_escalation();
+
+-- 4. Hardened RLS Policies for Profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can read profiles in same org or public" ON public.profiles;
@@ -128,27 +138,74 @@ CREATE POLICY "Admins can manage all profiles" ON public.profiles
     USING (public.is_nccr_admin())
     WITH CHECK (public.is_nccr_admin());
 
--- 4. Hardened RLS Policies for Onboarding Requests
+-- 5. Hardened RLS Policies for Onboarding Requests (No Public Table Exposure)
 ALTER TABLE public.onboarding_requests ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Public and authenticated can submit onboarding requests" ON public.onboarding_requests;
-CREATE POLICY "Public and authenticated can submit onboarding requests" ON public.onboarding_requests
-    FOR INSERT TO anon, authenticated
-    WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Public can view application status" ON public.onboarding_requests;
 DROP POLICY IF EXISTS "Public can view application status with code" ON public.onboarding_requests;
-CREATE POLICY "Public can view application status" ON public.onboarding_requests
-    FOR SELECT TO anon, authenticated
-    USING (true);
-
+DROP POLICY IF EXISTS "Users can read own onboarding requests" ON public.onboarding_requests;
+DROP POLICY IF EXISTS "Public and authenticated can submit onboarding requests" ON public.onboarding_requests;
 DROP POLICY IF EXISTS "NCCR Admins can manage onboarding requests" ON public.onboarding_requests;
+
+-- Authenticated applicants can only read their own submitted requests
+CREATE POLICY "Users can read own onboarding requests" ON public.onboarding_requests
+    FOR SELECT TO authenticated
+    USING (
+        auth.uid() = submitted_by 
+        OR primary_contact_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+        OR public.is_nccr_admin()
+    );
+
+-- Admins retain full governance access
 CREATE POLICY "NCCR Admins can manage onboarding requests" ON public.onboarding_requests
     FOR ALL TO authenticated
     USING (public.is_nccr_admin())
     WITH CHECK (public.is_nccr_admin());
 
--- 5. Safe Provisioning RPC for Organization Onboarding Approval
+-- Public and authenticated users can insert new onboarding requests
+CREATE POLICY "Public and authenticated can submit onboarding requests" ON public.onboarding_requests
+    FOR INSERT TO anon, authenticated
+    WITH CHECK (true);
+
+-- 6. Secure Controlled RPC for Public Status Tracking (Sanitized Fields Only)
+CREATE OR REPLACE FUNCTION public.get_onboarding_status(p_application_number TEXT)
+RETURNS JSONB AS $$
+DECLARE
+    v_req RECORD;
+BEGIN
+    SELECT 
+        application_number,
+        organization_name,
+        organization_type,
+        state,
+        district,
+        status,
+        review_notes,
+        created_at,
+        updated_at
+    INTO v_req
+    FROM public.onboarding_requests
+    WHERE application_number = p_application_number;
+
+    IF NOT FOUND THEN
+        RETURN NULL;
+    END IF;
+
+    RETURN jsonb_build_object(
+        'application_number', v_req.application_number,
+        'organization_name', v_req.organization_name,
+        'organization_type', v_req.organization_type,
+        'state', v_req.state,
+        'district', v_req.district,
+        'status', v_req.status,
+        'review_notes', v_req.review_notes,
+        'created_at', v_req.created_at,
+        'updated_at', v_req.updated_at
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 7. Safe Provisioning RPC for Organization Onboarding Approval
 CREATE OR REPLACE FUNCTION public.approve_onboarding_and_provision_org(
     p_request_id UUID,
     p_review_notes TEXT DEFAULT NULL
@@ -202,7 +259,7 @@ BEGIN
     )
     RETURNING id INTO v_org_id;
 
-    -- Determine appropriate provisioned role
+    -- Determine canonical role based on organization type
     IF v_req.organization_type = 'NGO' THEN
         v_user_role := 'NGO';
     ELSIF v_req.organization_type = 'PANCHAYAT' THEN
@@ -210,7 +267,7 @@ BEGIN
     ELSIF v_req.organization_type = 'DEVELOPER' THEN
         v_user_role := 'PROJECT_MANAGER';
     ELSE
-        v_user_role := 'ORG_ADMIN';
+        v_user_role := 'NGO';
     END IF;
 
     -- If applicant has an existing profile, link organization and assign role
