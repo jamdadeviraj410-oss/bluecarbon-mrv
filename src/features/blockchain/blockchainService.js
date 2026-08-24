@@ -69,8 +69,8 @@ export function formatBlockchainRecord(r) {
     ? `${contractAddress.slice(0, 6)}...${contractAddress.slice(-4)}`
     : null;
 
-  const networkShort = network.short_name || network.name || 'Network Not Configured';
-  const networkFull = network.name || 'Network Not Configured';
+  const networkShort = network.short_name ?? network.name ?? 'Network Not Configured';
+  const networkFull = network.name ?? network.short_name ?? 'Network Not Configured';
   const chainId = network.chain_id ?? null;
   const networkSymbol = network.symbol ?? null;
   const networkColor = network.color ?? '#6c757d';
@@ -114,7 +114,7 @@ export function formatBlockchainRecord(r) {
     { type: 'Verification', code: credit.verification_reference || 'Pending', label: credit.verifier_signatory || 'Pending Verifier' },
     { type: 'Evidence', code: r.payload?.evidence_count ? `${r.payload.evidence_count} Files` : (r.payload?.evidence_hashes?.length ? `${r.payload.evidence_hashes.length} Files` : 'Pending Files'), label: 'Cryptographic Evidence Hashes' },
     { type: 'Hash', code: dataHash ? `0x${dataHash.slice(0, 8)}...` : 'Pending Hash', label: 'Canonical SHA-256 Digest' },
-    { type: 'Polygon', code: r.tx_hash ? `${network.short_name || 'Blockchain'} ${r.block_number ? `#${r.block_number}` : ''}` : 'Pending On-Chain Anchor', label: r.tx_hash ? `${networkFull}` : 'Awaiting Smart Contract Anchor' },
+    { type: 'Polygon', code: r.tx_hash ? `${networkShort} ${r.block_number ? `#${r.block_number}` : ''}` : 'Pending On-Chain Anchor', label: r.tx_hash ? `${networkFull}` : 'Awaiting Smart Contract Anchor' },
   ];
 
   return {

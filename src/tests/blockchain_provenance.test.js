@@ -247,5 +247,29 @@ export async function runBlockchainProvenanceTests() {
     assert.strictEqual(formatted.status, 'Anchored on Polygon Amoy', 'Must display Anchored on Polygon Amoy, not On-Chain Verified');
   });
 
+  // Test 22: Semantic Integrity — Real verified on-chain result produces VERIFIED_ON_CHAIN
+  await recordTest('Semantic Integrity: Independent verified on-chain result produces VERIFIED_ON_CHAIN', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({
+      id: 'rec-1',
+      tx_hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      is_verified_on_chain: true,
+      network: { short_name: 'Polygon Amoy' },
+    });
+    assert.strictEqual(formatted.statusCode, 'VERIFIED_ON_CHAIN', 'Must produce VERIFIED_ON_CHAIN status code');
+    assert.strictEqual(formatted.status, 'On-Chain Verified', 'Must display On-Chain Verified');
+  });
+
+  // Test 23: Semantic Integrity — Explicit demo record produces DEMO_SIMULATED
+  await recordTest('Semantic Integrity: Demo record produces DEMO_SIMULATED status code', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({
+      id: 'rec-demo-1',
+      isDemo: true,
+    });
+    assert.strictEqual(formatted.statusCode, 'DEMO_SIMULATED', 'Must produce DEMO_SIMULATED status code');
+    assert.strictEqual(formatted.status, 'DEMO / SIMULATED', 'Must display DEMO / SIMULATED label');
+  });
+
   return testResults;
 }
