@@ -11,6 +11,8 @@ import {
   updateUserProfile,
 } from '../services/authService';
 
+import { IS_UI_PREVIEW_MODE, PREVIEW_USER } from '../config/uiPreviewMode';
+
 const AuthContext = createContext(null);
 
 export const AUTH_STATUS = {
@@ -23,10 +25,10 @@ export const AUTH_STATUS = {
 };
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(IS_UI_PREVIEW_MODE ? PREVIEW_USER : null);
   const [session, setSession] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [authStatus, setAuthStatus] = useState(AUTH_STATUS.INITIALIZING);
+  const [isLoading, setIsLoading] = useState(IS_UI_PREVIEW_MODE ? false : true);
+  const [authStatus, setAuthStatus] = useState(IS_UI_PREVIEW_MODE ? AUTH_STATUS.AUTHENTICATED : AUTH_STATUS.INITIALIZING);
 
   // Helper to format user object for app consumption
   // STRICT: Never fall back to NCCR_ADMIN or any administrative role

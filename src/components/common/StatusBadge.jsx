@@ -1,28 +1,68 @@
-export default function StatusBadge({ status, className = '' }) {
+export default function StatusBadge({ status, showDot = true, className = '' }) {
   const getStatusStyles = (statusStr) => {
-    const s = statusStr?.toLowerCase();
+    const s = String(statusStr || '').toLowerCase().trim();
     switch (s) {
       case 'verified':
       case 'active':
       case 'minted':
       case 'completed':
-        return 'bg-[#e8f5e9] text-[#2e7d32] border border-[#2e7d32]/20';
+      case 'confirmed':
+      case 'approved':
+        return {
+          wrapper: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+          dot: 'bg-emerald-600',
+        };
+      case 'blockchain verified':
+      case 'anchored':
+      case 'verified_on_chain':
+      case 'tokenized':
+        return {
+          wrapper: 'bg-cyan-50 text-cyan-800 border-cyan-200/80',
+          dot: 'bg-cyan-600',
+        };
       case 'pending':
-        return 'bg-[#fff3e0] text-[#f57f17] border border-[#f57f17]/20';
+      case 'pending anchor':
+      case 'pending_anchor':
       case 'under review':
-        return 'bg-[#fff8e1] text-[#f57f17] border border-[#f57f17]/20';
+      case 'under validation':
+      case 'under verification':
+      case 'submitted':
+      case 'changes requested':
+        return {
+          wrapper: 'bg-amber-50 text-amber-800 border-amber-200/80',
+          dot: 'bg-amber-600',
+        };
       case 'rejected':
       case 'retired':
-        return 'bg-[#ffdad6] text-[#d32f2f] border border-[#d32f2f]/20';
+      case 'suspended':
+      case 'flagged':
+      case 'critical':
+      case 'high':
+        return {
+          wrapper: 'bg-rose-50 text-rose-800 border-rose-200/80',
+          dot: 'bg-rose-600',
+        };
       case 'draft':
+      case 'demo':
+      case 'simulated':
+      case 'demo_simulated':
       default:
-        return 'bg-[#f3e5f5] text-[#7b1fa2] border border-[#7b1fa2]/20';
+        return {
+          wrapper: 'bg-slate-100 text-slate-700 border-slate-200',
+          dot: 'bg-slate-500',
+        };
     }
   };
 
+  const styles = getStatusStyles(status);
+
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-label-md text-label-md ${getStatusStyles(status)} ${className}`}>
-      {status || 'Unknown'}
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label-md text-xs font-semibold border tracking-wide uppercase ${styles.wrapper} ${className}`}
+    >
+      {showDot && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${styles.dot}`} />}
+      <span className="truncate">{status || 'Unknown'}</span>
     </span>
   );
 }
+

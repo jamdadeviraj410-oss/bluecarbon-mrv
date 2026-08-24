@@ -37,6 +37,8 @@ import { DroneBeforeAfterView } from '../features/drone';
 import { MrvIntelligenceDashboard, MrvAnomalyMatrix } from '../features/mrvIntelligence';
 import { SettingsPage } from '../features/settings';
 
+import { IS_UI_PREVIEW_MODE } from '../config/uiPreviewMode';
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -47,7 +49,7 @@ export default function AppRoutes() {
       <Route path={ROUTES.ACCESS_RESTRICTED} element={<AccessRestricted />} />
       <Route path={ROUTES.ONBOARDING} element={<OrganizationOnboardingPage />} />
       <Route path={ROUTES.ONBOARDING_STATUS} element={<OnboardingStatusPage />} />
-      <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
+      <Route path="/" element={<Navigate to={IS_UI_PREVIEW_MODE ? ROUTES.ADMIN_DASHBOARD : ROUTES.LOGIN} replace />} />
 
       {/* NCCR National Governance & Admin Routes (NCCR_ADMIN Only) */}
       <Route element={<RoleRoute allowedRoles={[ROLES.NCCR_ADMIN]}><AdminLayout /></RoleRoute>}>

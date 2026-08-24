@@ -1,10 +1,15 @@
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../utils/constants';
+import { IS_UI_PREVIEW_MODE } from '../../config/uiPreviewMode';
 
 export default function RoleRoute({ allowedRoles = [], children }) {
   const { user, isLoading } = useAuth();
   const location = useLocation();
+
+  if (IS_UI_PREVIEW_MODE) {
+    return children ? children : <Outlet />;
+  }
 
   if (isLoading) {
     return (

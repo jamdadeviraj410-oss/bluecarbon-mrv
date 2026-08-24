@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { MRV_DATA } from '../data/mockMrv';
 import { getProjectById } from '../../../services/projectService';
 import { getVerificationWorkspace, reviewVerification } from '../../../services/mrvService';
+import Button from '../../../components/common/Button';
+import StatusBadge from '../../../components/common/StatusBadge';
+import Card, { CardHeader } from '../../../components/common/Card';
 
 export default function ProjectVerificationPage() {
   const { verificationId } = useParams();
@@ -72,57 +75,70 @@ export default function ProjectVerificationPage() {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 flex flex-col min-h-screen p-6 md:p-8">
+    <div className="flex-1 bg-surface flex flex-col min-h-screen p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto w-full font-body-md text-on-surface">
+      {/* Breadcrumbs */}
+      <div className="flex items-center gap-2 text-xs font-mono-data text-on-surface-variant mb-3">
+        <Link to="/mrv" className="hover:text-primary transition-colors flex items-center gap-1">
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          <span>MRV VERIFICATION</span>
+        </Link>
+        <span>/</span>
+        <span className="text-primary font-semibold truncate">{details.id}</span>
+      </div>
+
       {/* Header */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-4 border-b border-gray-200 pb-6">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4 border-b border-outline-variant/30 pb-6">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3 mb-2">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-200 px-2 py-1 rounded whitespace-nowrap">
+            <span className="text-xs font-mono-data text-on-surface-variant uppercase tracking-wider bg-surface-container px-2.5 py-1 rounded-md">
               Project ID: {details.id}
             </span>
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-200 px-2 py-1 rounded whitespace-nowrap">
+            <span className="text-xs font-mono-data text-on-surface-variant uppercase tracking-wider bg-surface-container px-2.5 py-1 rounded-md">
               MRV Type: {details.type}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 break-words">{details.name}</h1>
-            <span className="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-yellow-200 whitespace-nowrap">
-              {details.status}
-            </span>
+            <h1 className="font-headline-lg text-2xl sm:text-3xl text-primary font-bold tracking-tight break-words">
+              {details.name}
+            </h1>
+            <StatusBadge status={details.status} />
           </div>
         </div>
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm">
-            <span className="material-symbols-outlined text-lg">cloud_download</span>
-            Data Package
-          </button>
-          <button
-            onClick={() => setDecisionModalOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm text-sm"
+        <div className="flex flex-wrap gap-2.5">
+          <Button
+            variant="outline"
+            icon="cloud_download"
+            onClick={() => alert(`Downloading MRV data package for ${details.id}...`)}
           >
-            <span className="material-symbols-outlined text-lg">gavel</span>
+            Data Package
+          </Button>
+          <Button
+            variant="primary"
+            icon="gavel"
+            onClick={() => setDecisionModalOpen(true)}
+          >
             Verification Decision
-          </button>
+          </Button>
         </div>
       </div>
 
       {statusMessage && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-sm flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px]">verified</span>
-          <span>{statusMessage}</span>
+        <div className="mb-6 p-4 bg-secondary-container/20 border border-secondary/30 text-secondary rounded-xl text-sm flex items-center gap-2">
+          <span className="material-symbols-outlined text-[20px]">verified</span>
+          <span className="font-semibold">{statusMessage}</span>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-200 p-1 rounded-lg w-fit mb-8 shadow-inner">
+      <div className="flex gap-1.5 bg-surface-container p-1 rounded-xl w-fit mb-6 border border-outline-variant/20">
         {['Overview', 'GIS/Drone Data', 'Sensor Logs', 'Blockchain Audit'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2 text-sm font-medium rounded-md transition-colors ${
+            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
               activeTab === tab
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-300'
+                ? 'bg-surface text-primary shadow-xs font-bold'
+                : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
             {tab}
@@ -133,92 +149,93 @@ export default function ProjectVerificationPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8 w-full max-w-[1440px]">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 w-full">
         {/* Left Column: Metrics & Imagery Reconciliation */}
         <div className="lg:col-span-3 flex flex-col gap-6">
           {/* Claimed Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 border border-gray-200 rounded-xl shadow-sm flex flex-col justify-center">
-              <span className="text-sm font-medium text-gray-500 mb-1">Carbon Sequestration</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card accentTop="primary">
+              <span className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1 block">Carbon Sequestration</span>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-gray-900">{metrics.carbonSequestration}</span>
-                <span className="text-sm font-semibold text-gray-500">tCO2e</span>
+                <span className="font-headline-lg text-2xl sm:text-3xl font-bold text-primary font-mono-data">{metrics.carbonSequestration}</span>
+                <span className="text-xs font-semibold text-on-surface-variant">tCO2e</span>
               </div>
-            </div>
-            <div className="bg-white p-6 border border-gray-200 rounded-xl shadow-sm flex flex-col justify-center">
-              <span className="text-sm font-medium text-gray-500 mb-1">Restoration Area</span>
+            </Card>
+            <Card accentTop="secondary">
+              <span className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1 block">Restoration Area</span>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-gray-900">{metrics.restorationArea}</span>
-                <span className="text-sm font-semibold text-gray-500">Hectares</span>
+                <span className="font-headline-lg text-2xl sm:text-3xl font-bold text-secondary font-mono-data">{metrics.restorationArea}</span>
+                <span className="text-xs font-semibold text-on-surface-variant">Hectares</span>
               </div>
-            </div>
-            <div className="bg-white p-6 border border-gray-200 rounded-xl shadow-sm flex flex-col justify-center">
-              <span className="text-sm font-medium text-gray-500 mb-1">Tree Density</span>
+            </Card>
+            <Card accentTop="tertiary">
+              <span className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1 block">Tree Density</span>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-gray-900">{metrics.treeDensity}</span>
-                <span className="text-sm font-semibold text-gray-500">stems/ha</span>
+                <span className="font-headline-lg text-2xl sm:text-3xl font-bold text-[#00abc1] font-mono-data">{metrics.treeDensity}</span>
+                <span className="text-xs font-semibold text-on-surface-variant">stems/ha</span>
               </div>
-            </div>
+            </Card>
           </div>
 
           {/* Map/Imagery Area */}
-          <div className="bg-gray-200 border border-gray-300 rounded-xl min-h-[400px] flex items-center justify-center relative overflow-hidden shadow-sm">
-            <div className="absolute inset-0 bg-blue-50 opacity-50"></div>
-            <div className="z-10 flex flex-col items-center text-gray-500">
-              <span className="material-symbols-outlined text-4xl mb-2 text-gray-400">map</span>
-              <span className="font-medium">GIS/Drone Map Visualization</span>
+          <Card padding="none" className="overflow-hidden min-h-[400px] flex items-center justify-center relative bg-[#001e40]">
+            {/* GIS background */}
+            <div className="absolute inset-0 opacity-40 bg-[radial-gradient(#00abc1_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            <div className="z-10 flex flex-col items-center text-on-primary">
+              <span className="material-symbols-outlined text-5xl mb-2 text-[#00abc1] opacity-80">map</span>
+              <span className="font-title-md font-semibold text-sm">GIS/Drone Multispectral Workspace</span>
+              <span className="text-xs font-mono-data opacity-60 mt-1">Bounding Box: 11.4285° N, 79.7912° E</span>
             </div>
             
-            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 shadow-md">
-              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Layer Control</h4>
-              <div className="flex flex-col gap-2 text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4" />
-                  <span className="text-gray-700 font-medium">Claimed Polygon (KML)</span>
+            <div className="absolute top-4 left-4 bg-surface-container-lowest/95 backdrop-blur-md p-4 rounded-xl border border-outline-variant/30 shadow-md">
+              <h4 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-2.5">Layer Control</h4>
+              <div className="flex flex-col gap-2 text-xs">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" defaultChecked className="rounded text-primary focus:ring-primary w-3.5 h-3.5 accent-primary" />
+                  <span className="text-on-surface font-medium">Claimed Polygon (KML)</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4" />
-                  <span className="text-gray-700 font-medium">Drone Orthomosaic</span>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" defaultChecked className="rounded text-primary focus:ring-primary w-3.5 h-3.5 accent-primary" />
+                  <span className="text-on-surface font-medium">Drone Orthomosaic</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4" />
-                  <span className="text-gray-700 font-medium">NDVI Biomass Filter</span>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" className="rounded text-primary focus:ring-primary w-3.5 h-3.5 accent-primary" />
+                  <span className="text-on-surface font-medium">NDVI Biomass Filter</span>
                 </label>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Right Column: Protocol Checklist */}
         <div className="lg:col-span-1 flex flex-col gap-6">
-          <div className="bg-white p-6 border border-gray-200 rounded-xl shadow-sm flex flex-col h-full">
-            <h3 className="text-base font-bold text-gray-900 mb-4">Protocol Compliance Checklist</h3>
-            <div className="flex flex-col gap-4">
+          <Card>
+            <CardHeader
+              title="Protocol Checklist"
+              subtitle="NCCR Coastal Standard criteria"
+            />
+            <div className="flex flex-col gap-3">
               {checklist.map((item) => (
-                <div key={item.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div key={item.id} className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-mono text-gray-500 font-bold">{item.id}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      item.status === 'verified' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {item.status === 'verified' ? 'Verified' : 'Pending'}
-                    </span>
+                    <span className="text-[11px] font-mono-data text-on-surface-variant font-bold">{item.id}</span>
+                    <StatusBadge status={item.status} showDot={false} />
                   </div>
-                  <h4 className="text-sm font-semibold text-gray-900">{item.title}</h4>
-                  <p className="text-xs text-gray-500 mt-1">{item.description}</p>
+                  <h4 className="font-title-md text-xs font-semibold text-on-surface m-0">{item.title}</h4>
+                  <p className="font-body-md text-[11px] text-on-surface-variant mt-1 m-0">{item.description}</p>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
       </div>
 
       {/* Verification Decision Modal */}
       {decisionModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Record Verification Decision</h3>
-            <p className="text-sm text-gray-500 mb-4">
+        <div className="fixed inset-0 bg-on-surface/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest rounded-2xl p-6 max-w-md w-full shadow-2xl border border-outline-variant/30 animate-scale-up">
+            <h3 className="font-headline-md text-lg font-bold text-primary mb-1">Record Verification Decision</h3>
+            <p className="font-body-md text-xs text-on-surface-variant mb-4">
               Submit your formal auditor assessment for {details.name}.
             </p>
             <textarea
@@ -226,29 +243,32 @@ export default function ProjectVerificationPage() {
               onChange={(e) => setDecisionNotes(e.target.value)}
               placeholder="Auditor comments, risk buffer allocations, and methodology notes..."
               rows={4}
-              className="w-full p-3 border border-gray-300 rounded-xl text-sm mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full p-3 bg-surface border border-outline-variant rounded-xl text-sm font-body-md text-on-surface mb-4 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
             />
-            <div className="flex justify-end gap-3">
-              <button
+            <div className="flex justify-end gap-2.5">
+              <Button
+                variant="outline"
                 onClick={() => setDecisionModalOpen(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => handleVerificationDecision('REJECT')}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700"
+                isLoading={isSubmitting}
               >
                 Reject MRV
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 onClick={() => handleVerificationDecision('APPROVE')}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                isLoading={isSubmitting}
+                icon="verified"
               >
                 Approve & Verify
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -256,3 +276,4 @@ export default function ProjectVerificationPage() {
     </div>
   );
 }
+

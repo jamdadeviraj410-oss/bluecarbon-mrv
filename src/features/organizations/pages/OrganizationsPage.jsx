@@ -1,169 +1,317 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getOrganizations } from '../../../services/organizationService';
-import { mockOrganizations } from '../data/mockOrganizations';
-import OrganizationDetailDialog from '../components/OrganizationDetailDialog';
 import { ROUTES } from '../../../utils/constants';
 
-const StatusBadge = ({ status }) => {
-  let colors = "bg-gray-100 text-gray-700";
-  if (status === "Verified") {
-    colors = "bg-[#4CAF50]/10 text-[#2E7D32]";
-  } else if (status === "Pending") {
-    colors = "bg-[#FFA000]/10 text-[#B47000]";
-  } else if (status === "Suspended" || status === "Rejected") {
-    colors = "bg-[#D32F2F]/10 text-[#D32F2F]";
-  }
+const MOCK_ORGS = [
+  {
+    id: 'ORG-2023-001',
+    name: 'Mangrove Foundation of Maharashtra',
+    type: 'NGO / Environmental Foundation',
+    location: 'Mumbai, Maharashtra',
+    contactEmail: 'contact@mangrovemaharashtra.org',
+    contactPerson: 'Dr. Virendra Tiwari',
+    projectsCount: 4,
+    verifiedCredits: '28,400 tCO2e',
+    status: 'Verified',
+    registrationDate: '12 Jan 2023',
+    kycStatus: 'Approved',
+  },
+  {
+    id: 'ORG-2023-002',
+    name: 'Sundarbans Coastal Panchayat Union',
+    type: 'Gram Panchayat',
+    location: 'South 24 Parganas, West Bengal',
+    contactEmail: 'sundarbans.panchayat@wb.gov.in',
+    contactPerson: 'Anirban Mukherjee',
+    projectsCount: 6,
+    verifiedCredits: '45,200 tCO2e',
+    status: 'Verified',
+    registrationDate: '04 Mar 2023',
+    kycStatus: 'Approved',
+  },
+  {
+    id: 'ORG-2023-003',
+    name: 'Oceanic Blue Carbon Initiative',
+    type: 'Project Developer',
+    location: 'Chennai, Tamil Nadu',
+    contactEmail: 'info@oceanicblue.org',
+    contactPerson: 'Kavitha Ramanathan',
+    projectsCount: 2,
+    verifiedCredits: '14,800 tCO2e',
+    status: 'Pending',
+    registrationDate: '19 Aug 2023',
+    kycStatus: 'Under Review',
+  },
+  {
+    id: 'ORG-2024-004',
+    name: 'Andaman Marine Ecology Trust',
+    type: 'NGO / Ecology Trust',
+    location: 'Port Blair, Andaman & Nicobar',
+    contactEmail: 'support@andamanmarine.org',
+    contactPerson: 'Sanjay Chander',
+    projectsCount: 3,
+    verifiedCredits: '21,000 tCO2e',
+    status: 'Verified',
+    registrationDate: '15 Feb 2024',
+    kycStatus: 'Approved',
+  },
+  {
+    id: 'ORG-2024-005',
+    name: 'Gujarat Coastal Saltmarsh Alliance',
+    type: 'Cooperative Society',
+    location: 'Kutch, Gujarat',
+    contactEmail: 'kutch.alliance@gujaratcoastal.org',
+    contactPerson: 'Bhavesh Patel',
+    projectsCount: 1,
+    verifiedCredits: '8,500 tCO2e',
+    status: 'Under Review',
+    registrationDate: '10 Jun 2024',
+    kycStatus: 'Pending Verification',
+  },
+];
 
-  return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full font-label-md text-[12px] uppercase tracking-wider ${colors}`}>
-      {status}
-    </span>
-  );
-};
-
-const OrganizationsPage = () => {
-  const [organizationsList, setOrganizationsList] = useState(mockOrganizations);
+export default function OrganizationsPage() {
+  const [organizations] = useState(MOCK_ORGS);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedOrg, setSelectedOrg] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
-    async function loadOrgs() {
-      try {
-        const data = await getOrganizations();
-        if (isMounted && data && data.length > 0) {
-          setOrganizationsList(data);
-        }
-      } catch (err) {
-        console.error('Failed to load organizations from Supabase:', err);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-    loadOrgs();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const filteredOrgs = organizationsList.filter(org => 
-    org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (org.type && org.type.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (org.location && org.location.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredOrgs = organizations.filter((org) => {
+    const matchesSearch =
+      org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      org.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      org.location.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'ALL' || org.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
-    <div className="max-w-[1440px] mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-      
+    <div className="flex flex-col w-full p-4 sm:p-6 xl:p-8 gap-6 bg-background min-h-screen">
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="font-headline-lg text-primary tracking-tight">Registered Organizations</h1>
-          <p className="font-body-md text-on-surface-variant mt-1">
-            Manage and verify participating entities in the blue carbon registry.
+          <h1 className="font-headline-lg text-2xl sm:text-3xl text-on-surface font-bold mb-1">
+            Registered Organizations
+          </h1>
+          <p className="font-body-md text-sm text-on-surface-variant">
+            Manage and verify participating entities in the national blue carbon registry.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-            <input 
-              type="text" 
-              placeholder="Search organizations..." 
+
+        {/* Controls */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 sm:flex-none">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">
+              search
+            </span>
+            <input
+              type="text"
+              placeholder="Search organizations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 w-full md:w-64 transition-shadow"
+              className="pl-9 pr-4 py-2 bg-surface-container-lowest border border-outline-variant/40 rounded-xl font-body-md text-xs text-on-surface focus:outline-none focus:border-primary w-full sm:w-64 transition-all shadow-2xs"
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant rounded-lg text-on-surface font-title-sm hover:bg-surface-container transition-colors">
-            <span className="material-symbols-outlined text-[20px]">filter_list</span>
-            Filter
-          </button>
-          <Link to={ROUTES.ONBOARDING} className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-title-sm hover:bg-primary-container transition-colors shadow-sm">
-            <span className="material-symbols-outlined text-[20px]">add</span>
-            Register Org
-          </Link>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 bg-surface-container-lowest border border-outline-variant/40 rounded-xl font-title-md text-xs text-on-surface focus:outline-none cursor-pointer shadow-2xs"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="Verified">Verified</option>
+              <option value="Pending">Pending</option>
+              <option value="Under Review">Under Review</option>
+            </select>
+
+            <Link
+              to={ROUTES.ONBOARDING}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl font-title-md text-xs font-bold hover:bg-primary-container transition-all shadow-xs"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span>Register Org</span>
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div className="bg-surface rounded-xl border border-outline-variant/30 shadow-sm overflow-hidden">
+      {/* Organizations Table matching Stitch */}
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#F1F5F9] border-b border-outline-variant/30">
-                <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Organization</th>
-                <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Type & Location</th>
-                <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Projects</th>
-                <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Verified Credits</th>
-                <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
+              <tr className="bg-surface-container-low/60 border-b border-outline-variant/30">
+                <th className="px-6 py-3.5 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider font-bold">
+                  Organization
+                </th>
+                <th className="px-6 py-3.5 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider font-bold">
+                  Type & Location
+                </th>
+                <th className="px-6 py-3.5 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider font-bold">
+                  Projects
+                </th>
+                <th className="px-6 py-3.5 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider font-bold">
+                  Verified Credits
+                </th>
+                <th className="px-6 py-3.5 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider font-bold">
+                  Status
+                </th>
+                <th className="px-6 py-3.5 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider font-bold text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
               {filteredOrgs.map((org) => (
-                <tr key={org.id} className="hover:bg-primary/5 transition-colors group cursor-pointer" onClick={() => setSelectedOrg(org)}>
+                <tr
+                  key={org.id}
+                  onClick={() => setSelectedOrg(org)}
+                  className="hover:bg-surface-container/30 transition-colors cursor-pointer"
+                >
                   <td className="px-6 py-4">
-                    <div className="font-title-md text-on-surface">{org.name}</div>
-                    <div className="font-mono-data text-outline text-[12px]">{org.id}</div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-primary-container/20 text-primary flex items-center justify-center font-bold font-title-md text-xs shrink-0">
+                        {org.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-title-md text-xs font-bold text-on-surface truncate">
+                          {org.name}
+                        </span>
+                        <span className="font-mono-data text-[11px] text-on-surface-variant">
+                          {org.id} • Registered {org.registrationDate}
+                        </span>
+                      </div>
+                    </div>
                   </td>
+
                   <td className="px-6 py-4">
-                    <div className="font-body-md text-on-surface">{org.type}</div>
-                    <div className="font-body-sm text-on-surface-variant">{org.location}</div>
+                    <div className="flex flex-col">
+                      <span className="font-title-md text-xs text-on-surface">{org.type}</span>
+                      <span className="font-body-md text-[11px] text-on-surface-variant">{org.location}</span>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 font-body-md text-on-surface">
-                    {org.activeProjects}
-                  </td>
-                  <td className="px-6 py-4 font-mono-data text-secondary">
-                    {org.totalVerifiedCredits}
-                  </td>
+
                   <td className="px-6 py-4">
-                    <StatusBadge status={org.status} />
+                    <span className="px-2.5 py-1 rounded-md bg-surface-container text-on-surface font-mono-data text-xs font-bold">
+                      {org.projectsCount} Active
+                    </span>
                   </td>
+
+                  <td className="px-6 py-4">
+                    <span className="font-mono-data text-xs font-bold text-secondary">
+                      {org.verifiedCredits}
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    {org.status === 'Verified' ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-md text-[11px] uppercase tracking-wider font-bold bg-secondary/10 text-secondary">
+                        <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                        Verified
+                      </span>
+                    ) : org.status === 'Pending' ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-md text-[11px] uppercase tracking-wider font-bold bg-amber-500/10 text-amber-600">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        Pending
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-md text-[11px] uppercase tracking-wider font-bold bg-blue-500/10 text-blue-600">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                        Under Review
+                      </span>
+                    )}
+                  </td>
+
                   <td className="px-6 py-4 text-right">
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedOrg(org);
                       }}
-                      className="p-2 rounded-md hover:bg-surface-container text-primary transition-colors inline-flex items-center justify-center"
-                      title="View Details"
+                      className="px-3 py-1.5 bg-surface-container hover:bg-primary hover:text-on-primary text-on-surface font-title-md text-xs font-semibold rounded-lg transition-colors"
                     >
-                      <span className="material-symbols-outlined text-[20px]">visibility</span>
+                      View Details
                     </button>
                   </td>
                 </tr>
               ))}
-              {filteredOrgs.length === 0 && (
-                <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-on-surface-variant font-body-md">
-                    {isLoading ? 'Loading organizations...' : 'No organizations found matching your search.'}
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination */}
-        <div className="px-6 py-4 border-t border-outline-variant/30 flex items-center justify-between bg-surface-container-lowest">
-          <span className="font-body-sm text-on-surface-variant">Showing 1 to {filteredOrgs.length} of {organizationsList.length} entries</span>
-          <div className="flex gap-1">
-            <button className="px-3 py-1 border border-outline-variant rounded hover:bg-surface-container text-on-surface transition-colors" disabled>Previous</button>
-            <button className="px-3 py-1 bg-primary text-on-primary rounded transition-colors">1</button>
-            <button className="px-3 py-1 border border-outline-variant rounded hover:bg-surface-container text-on-surface transition-colors" disabled>Next</button>
-          </div>
-        </div>
       </div>
 
-      <OrganizationDetailDialog 
-        organization={selectedOrg} 
-        isOpen={!!selectedOrg} 
-        onClose={() => setSelectedOrg(null)} 
-      />
+      {/* Organization Details Modal / Drawer */}
+      {selectedOrg && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-surface rounded-2xl max-w-lg w-full p-6 shadow-xl border border-outline-variant/30 flex flex-col">
+            <div className="flex items-center justify-between pb-4 border-b border-outline-variant/20 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+                  {selectedOrg.name.substring(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="font-headline-md text-base font-bold text-on-surface">{selectedOrg.name}</h3>
+                  <span className="font-mono-data text-xs text-on-surface-variant">{selectedOrg.id}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedOrg(null)}
+                className="text-on-surface-variant hover:text-on-surface p-1"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3 mb-6">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-surface-container p-3 rounded-xl">
+                  <span className="font-label-md text-[10px] text-on-surface-variant uppercase block mb-0.5">Entity Type</span>
+                  <span className="font-title-md text-xs text-on-surface font-semibold">{selectedOrg.type}</span>
+                </div>
+                <div className="bg-surface-container p-3 rounded-xl">
+                  <span className="font-label-md text-[10px] text-on-surface-variant uppercase block mb-0.5">Location</span>
+                  <span className="font-title-md text-xs text-on-surface font-semibold">{selectedOrg.location}</span>
+                </div>
+                <div className="bg-surface-container p-3 rounded-xl">
+                  <span className="font-label-md text-[10px] text-on-surface-variant uppercase block mb-0.5">Representative</span>
+                  <span className="font-title-md text-xs text-on-surface font-semibold">{selectedOrg.contactPerson}</span>
+                </div>
+                <div className="bg-surface-container p-3 rounded-xl">
+                  <span className="font-label-md text-[10px] text-on-surface-variant uppercase block mb-0.5">KYC Status</span>
+                  <span className="font-title-md text-xs text-secondary font-bold">{selectedOrg.kycStatus}</span>
+                </div>
+              </div>
+
+              <div className="bg-surface-container p-3.5 rounded-xl">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-label-md text-[11px] text-on-surface-variant uppercase">Total Managed Projects</span>
+                  <span className="font-mono-data text-xs font-bold text-on-surface">{selectedOrg.projectsCount} Active Sites</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-label-md text-[11px] text-on-surface-variant uppercase">Verified Carbon Sequestration</span>
+                  <span className="font-mono-data text-xs font-bold text-secondary">{selectedOrg.verifiedCredits}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSelectedOrg(null)}
+                className="flex-1 bg-surface-container text-on-surface font-title-md text-xs font-semibold py-2.5 rounded-xl hover:bg-surface-container-high transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => setSelectedOrg(null)}
+                className="flex-1 bg-primary text-on-primary font-title-md text-xs font-bold py-2.5 rounded-xl hover:bg-primary-container transition-colors shadow-xs"
+              >
+                Manage Organization
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default OrganizationsPage;
+}

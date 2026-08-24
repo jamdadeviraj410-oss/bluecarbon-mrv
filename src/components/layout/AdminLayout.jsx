@@ -1,23 +1,26 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES, ROUTES } from '../../utils/constants';
+import { IS_UI_PREVIEW_MODE } from '../../config/uiPreviewMode';
 import Sidebar from './Sidebar';
 
 export default function AdminLayout() {
   const { user, isLoading } = useAuth();
 
-  if (isLoading) {
-    return <div className="min-h-screen bg-surface flex items-center justify-center">Loading...</div>;
-  }
+  if (!IS_UI_PREVIEW_MODE) {
+    if (isLoading) {
+      return <div className="min-h-screen bg-surface flex items-center justify-center">Loading...</div>;
+    }
 
-  // Redirect to login if not authenticated
-  if (!user) {
-    return <Navigate to={ROUTES.LOGIN} replace />;
-  }
+    // Redirect to login if not authenticated
+    if (!user) {
+      return <Navigate to={ROUTES.LOGIN} replace />;
+    }
 
-  // Only allow admin access
-  if (user.role !== ROLES.NCCR_ADMIN) {
-    return <Navigate to={ROUTES.ACCESS_RESTRICTED} replace />;
+    // Only allow admin access
+    if (user.role !== ROLES.NCCR_ADMIN) {
+      return <Navigate to={ROUTES.ACCESS_RESTRICTED} replace />;
+    }
   }
 
   return (
