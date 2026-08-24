@@ -5,6 +5,7 @@ import {
   publicRegistryProjects,
   getPublicRegistryProjects,
 } from './publicRegistryService';
+import InteractiveRegistryMap from '../../components/common/InteractiveRegistryMap';
 
 export default function PublicRegistryPage() {
   // Filter States
@@ -13,7 +14,6 @@ export default function PublicRegistryPage() {
   const [selectedType, setSelectedType] = useState('All');
   const [maxPrice, setMaxPrice] = useState(45);
   const [viewMode, setViewMode] = useState('map'); // 'map' | 'cards'
-  const [zoomLevel, setZoomLevel] = useState(1);
 
   // Detail Drawer State
   const [selectedProject, setSelectedProject] = useState(publicRegistryProjects[0]);
@@ -263,61 +263,36 @@ export default function PublicRegistryPage() {
         {/* Main Map & Explorer Area (Right) */}
         <div className="flex-1 flex flex-col relative min-h-[580px] lg:h-[700px] bg-surface-container-lowest rounded-2xl shadow-lg overflow-hidden border border-outline-variant/60">
           {viewMode === 'map' ? (
-            /* Interactive Satellite Map View */
+            /* Interactive Real Leaflet Map View */
             <div className="w-full h-full relative overflow-hidden group/map flex-1">
-              {/* Map Background with zoom transform */}
-              <div
-                className="w-full h-full bg-cover bg-center absolute inset-0 z-0 transition-transform duration-700"
-                style={{
-                  transform: `scale(${zoomLevel})`,
-                  backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuBuXD9_qXDdzhEOJUeUp4m7Q75K83Ee9Mc1jT-jPtBCyK65ziXOOpNn7KpDndZ1B47zznrWGzzDKb8POTlY9bukfBT5m85JP4hYaiVVl4i4_hUuzF1wN-TwXeKa3yoCW87ogsavvD313MEVpdzj-ET1Z_S2fV0L-Ugdg2KGolg7EnsQUM6zMUhi787e5gzeC1MLHqy5gAF-X4wn2DipXWMj1CWR_qFTuZKe0XskzXvxFmuYZM-ICIdmRA')`,
-                }}
-              ></div>
+              <InteractiveRegistryMap
+                projects={filteredProjects}
+                selectedProject={selectedProject}
+                onSelectProject={handleSelectProject}
+              />
 
-              {/* Overlay Controls (Top Right) */}
+              {/* Overlay View Switcher (Top Right) */}
               <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
-                <div className="flex bg-surface rounded-xl shadow-md p-1 border border-outline-variant/40">
+                <div className="flex bg-surface/95 backdrop-blur-md rounded-xl shadow-md p-1 border border-outline-variant/40">
                   <button
                     onClick={() => setViewMode('map')}
                     title="Map View"
-                    className="p-1.5 rounded-lg bg-primary text-on-primary transition-colors"
+                    className="p-1.5 rounded-lg bg-primary text-on-primary transition-colors cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[18px]">map</span>
                   </button>
                   <button
                     onClick={() => setViewMode('cards')}
                     title="Grid Cards View"
-                    className="p-1.5 rounded-lg text-on-surface hover:bg-surface-container transition-colors"
+                    className="p-1.5 rounded-lg text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[18px]">grid_view</span>
                   </button>
                 </div>
-
-                <button
-                  onClick={() => setZoomLevel((z) => Math.min(1.4, z + 0.1))}
-                  aria-label="Zoom In"
-                  className="w-9 h-9 bg-surface text-on-surface rounded-xl shadow-md flex items-center justify-center hover:bg-surface-container transition-colors hover:text-primary cursor-pointer border border-outline-variant/40"
-                >
-                  <span className="material-symbols-outlined text-[18px]">add</span>
-                </button>
-                <button
-                  onClick={() => setZoomLevel((z) => Math.max(0.9, z - 0.1))}
-                  aria-label="Zoom Out"
-                  className="w-9 h-9 bg-surface text-on-surface rounded-xl shadow-md flex items-center justify-center hover:bg-surface-container transition-colors hover:text-primary cursor-pointer border border-outline-variant/40"
-                >
-                  <span className="material-symbols-outlined text-[18px]">remove</span>
-                </button>
-                <button
-                  onClick={() => setZoomLevel(1)}
-                  aria-label="Reset View"
-                  className="w-9 h-9 bg-surface text-on-surface rounded-xl shadow-md flex items-center justify-center hover:bg-surface-container transition-colors hover:text-primary cursor-pointer border border-outline-variant/40"
-                >
-                  <span className="material-symbols-outlined text-[18px]">my_location</span>
-                </button>
               </div>
 
               {/* Map Legend (Bottom Left) */}
-              <div className="absolute bottom-4 left-4 z-20 bg-surface/90 backdrop-blur-md rounded-xl shadow-md p-3 flex flex-col gap-1.5 max-w-[210px] border border-outline-variant/50">
+              <div className="absolute bottom-4 left-4 z-20 bg-surface/95 backdrop-blur-md rounded-xl shadow-md p-3 flex flex-col gap-1.5 max-w-[210px] border border-outline-variant/50">
                 <span className="font-label-md text-[11px] font-semibold text-on-surface uppercase tracking-wider">
                   Status Overlay
                 </span>
@@ -330,33 +305,6 @@ export default function PublicRegistryPage() {
                   <span>Monitoring Phase</span>
                 </div>
               </div>
-
-              {/* Simulated Map Pins */}
-              {filteredProjects.map((proj) => {
-                const isSelected = selectedProject?.id === proj.id && isDetailOpen;
-                return (
-                  <button
-                    key={proj.id}
-                    onClick={() => handleSelectProject(proj)}
-                    style={{
-                      top: proj.mapPosition?.top || '50%',
-                      left: proj.mapPosition?.left || '50%',
-                    }}
-                    title={`${proj.name} (${proj.totalSequestered} tCO2e)`}
-                    className="absolute z-30 group cursor-pointer -translate-x-1/2 -translate-y-1/2 focus:outline-none"
-                  >
-                    <div
-                      className={`w-4 h-4 rounded-full shadow-[0_0_0_3px_rgba(255,255,255,0.9),0_4px_10px_rgba(0,0,0,0.3)] transition-transform duration-300 relative group-hover:scale-130 ${
-                        proj.statusCategory === 'verified' ? 'bg-secondary' : 'bg-[#00abc1]'
-                      } ${isSelected ? 'scale-125 ring-2 ring-primary' : ''}`}
-                    >
-                      {proj.statusCategory === 'verified' && (
-                        <div className="absolute inset-0 bg-secondary rounded-full animate-ping opacity-60 pointer-events-none"></div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
             </div>
           ) : (
             /* Grid Cards View */
