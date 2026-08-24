@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '../../utils/constants';
 import {
   publicRegistryProjects,
   getPublicRegistryProjects,
@@ -553,21 +555,24 @@ export default function PublicRegistryPage() {
                 </div>
 
                 {/* Sticky Footer Actions */}
-                <div className="sticky bottom-0 left-0 right-0 p-4 bg-surface border-t border-outline-variant/40 flex gap-2 z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
-                  <button
-                    onClick={() => handleDownloadProjectData(selectedProject)}
-                    className="flex-1 py-2.5 px-4 bg-primary text-on-primary font-label-md text-xs font-semibold rounded-xl shadow-sm hover:bg-primary-container transition-all cursor-pointer"
-                  >
-                    View Full Report
-                  </button>
-                  <button
-                    onClick={() => handleDownloadProjectData(selectedProject)}
-                    aria-label="Download Data"
-                    title="Download Project Record"
-                    className="p-2.5 bg-surface text-primary border border-primary font-label-md rounded-xl shadow-sm hover:bg-primary/5 transition-colors cursor-pointer flex items-center justify-center"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">download</span>
-                  </button>
+                <div className="sticky bottom-0 left-0 right-0 p-4 bg-surface border-t border-outline-variant/40 flex flex-col gap-2 z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
+                  <div className="flex gap-2">
+                    <Link
+                      to={ROUTES.PUBLIC_PROVENANCE_DETAIL.replace(':id', selectedProject.id)}
+                      className="flex-1 py-2.5 px-4 bg-secondary hover:bg-secondary/90 text-on-secondary font-label-md text-xs font-bold rounded-xl shadow-sm transition-all text-center flex items-center justify-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">fingerprint</span>
+                      Credit DNA Provenance
+                    </Link>
+                    <button
+                      onClick={() => handleDownloadProjectData(selectedProject)}
+                      aria-label="Download Data"
+                      title="Download Project Record"
+                      className="p-2.5 bg-surface text-primary border border-primary font-label-md rounded-xl shadow-sm hover:bg-primary/5 transition-colors cursor-pointer flex items-center justify-center"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">download</span>
+                    </button>
+                  </div>
                 </div>
               </>
             )}

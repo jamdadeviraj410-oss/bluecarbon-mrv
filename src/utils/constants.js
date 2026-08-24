@@ -1,12 +1,14 @@
 /**
- * Application-wide constants
+ * Application-wide constants & Role-Based Access Control (RBAC)
  */
 
 export const ROLES = {
   NCCR_ADMIN: 'NCCR_ADMIN',
+  VERIFIER: 'VERIFIER',
   NGO: 'NGO',
   PANCHAYAT: 'PANCHAYAT',
   COMMUNITY: 'COMMUNITY',
+  PROJECT_MANAGER: 'PROJECT_MANAGER',
   PUBLIC: 'PUBLIC',
 };
 
@@ -23,6 +25,8 @@ export const PROJECT_STATUS = {
 export const MRV_STATUS = {
   VERIFIED: 'Verified',
   UNDER_REVIEW: 'Under Review',
+  UNDER_VALIDATION: 'Under Validation',
+  UNDER_VERIFICATION: 'Under Verification',
   PENDING: 'Pending',
   REJECTED: 'Rejected',
   DRAFT: 'Draft',
@@ -33,6 +37,16 @@ export const CREDIT_STATUS = {
   RETIRED: 'Retired',
   PENDING: 'Pending',
   MINTED: 'Minted',
+  TOKENIZED: 'Tokenized',
+};
+
+export const ONBOARDING_STATUS = {
+  DRAFT: 'Draft',
+  SUBMITTED: 'Submitted',
+  UNDER_REVIEW: 'Under Review',
+  APPROVED: 'Approved',
+  CHANGES_REQUESTED: 'Changes Requested',
+  REJECTED: 'Rejected',
 };
 
 export const ROUTES = {
@@ -40,7 +54,11 @@ export const ROUTES = {
   FORGOT_PASSWORD: '/forgot-password',
   ACCESS_RESTRICTED: '/access-restricted',
 
+  // NCCR National Governance & Admin
   ADMIN_DASHBOARD: '/admin/dashboard',
+  ADMIN_GOVERNANCE: '/admin/governance',
+  ADMIN_NATIONAL_MAP: '/admin/national-map',
+  ADMIN_GOVERNANCE_QUEUES: '/admin/governance/queues',
   ADMIN_PROJECTS: '/projects',
   ADMIN_PROJECT_NEW: '/projects/new',
   ADMIN_PROJECT_DETAIL: '/projects/:id',
@@ -57,6 +75,11 @@ export const ROUTES = {
   ADMIN_AUDIT: '/admin/audit',
   ADMIN_SETTINGS: '/admin/settings',
 
+  // Onboarding
+  ONBOARDING: '/onboarding',
+  ONBOARDING_STATUS: '/onboarding/status',
+
+  // Organization Workspaces (NGO, Panchayat, Project Manager)
   ORG_DASHBOARD: '/organization/dashboard',
   ORG_PROJECTS: '/organization/projects',
   ORG_CREATE_PROJECT: '/organization/projects/new',
@@ -64,11 +87,14 @@ export const ROUTES = {
   ORG_UPLOAD_EVIDENCE: '/organization/evidence/upload',
   ORG_SETTINGS: '/organization/settings',
 
+  // Community Portal
   COMMUNITY_DASHBOARD: '/community/dashboard',
   COMMUNITY_PORTAL: '/community/portal',
 
+  // Public Transparency Registry & Credit DNA
   PUBLIC_REGISTRY: '/public',
   PUBLIC_PROJECT_DETAIL: '/public/projects/:id',
   PUBLIC_CREDIT_DETAIL: '/public/credits/:id',
+  PUBLIC_PROVENANCE_DETAIL: '/public/provenance/:id',
   STATUS: '/status',
 };

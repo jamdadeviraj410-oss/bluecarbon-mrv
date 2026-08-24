@@ -7,15 +7,25 @@ export default function OrganizationLayout() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="min-h-screen bg-surface flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen bg-surface flex items-center justify-center font-mono-data text-sm">Loading workspace...</div>;
   }
 
   if (!user) {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
-  // Allow NGO or PANCHAYAT
-  if (user.role !== ROLES.NGO && user.role !== ROLES.PANCHAYAT) {
+  const allowedRoles = [
+    ROLES.NGO,
+    ROLES.PANCHAYAT,
+    ROLES.COMMUNITY,
+    ROLES.PROJECT_MANAGER,
+    ROLES.NCCR_ADMIN,
+    'ORG_ADMIN',
+    'COMMUNITY_USER',
+    'DEVELOPER',
+  ];
+
+  if (!allowedRoles.includes(user.role)) {
     return <Navigate to={ROUTES.ACCESS_RESTRICTED} replace />;
   }
 
