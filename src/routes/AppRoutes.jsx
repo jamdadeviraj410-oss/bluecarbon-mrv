@@ -34,6 +34,7 @@ import { CommunityDashboardPage, CommunityPortalPage } from '../features/communi
 import { OcrReviewWorkspace } from '../features/ocr';
 import { SensorRegistryView } from '../features/sensors';
 import { DroneBeforeAfterView } from '../features/drone';
+import { DroneSensorDataPage } from '../features/droneSensorData';
 import { MrvIntelligenceDashboard, MrvAnomalyMatrix } from '../features/mrvIntelligence';
 import { SettingsPage } from '../features/settings';
 
@@ -49,35 +50,46 @@ export default function AppRoutes() {
       <Route path={ROUTES.ACCESS_RESTRICTED} element={<AccessRestricted />} />
       <Route path={ROUTES.ONBOARDING} element={<OrganizationOnboardingPage />} />
       <Route path={ROUTES.ONBOARDING_STATUS} element={<OnboardingStatusPage />} />
-      <Route path="/" element={<Navigate to={IS_UI_PREVIEW_MODE ? ROUTES.ADMIN_DASHBOARD : ROUTES.LOGIN} replace />} />
+      <Route path="/" element={<Navigate to={IS_UI_PREVIEW_MODE ? ROUTES.DASHBOARD : ROUTES.LOGIN} replace />} />
 
-      {/* NCCR National Governance & Admin Routes (NCCR_ADMIN Only) */}
+      {/* Canonical Marine Ledger & National Governance Routes (NCCR_ADMIN Only) */}
       <Route element={<RoleRoute allowedRoles={[ROLES.NCCR_ADMIN]}><AdminLayout /></RoleRoute>}>
+        {/* Canonical Marine Ledger Routes */}
+        <Route path={ROUTES.DASHBOARD} element={<AdminDashboard />} />
         <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
+        <Route path={ROUTES.PROJECTS} element={<ProjectsPage />} />
+        <Route path={ROUTES.PROJECT_NEW} element={<ProjectFormPage />} />
+        <Route path={ROUTES.PROJECT_DETAIL} element={<ProjectDetailPage />} />
+        <Route path={ROUTES.MRV_VERIFICATION} element={<ProjectVerificationPage />} />
+        <Route path={ROUTES.MRV_PROJECT_VERIFICATION} element={<ProjectVerificationPage />} />
+        <Route path={ROUTES.MRV_WORKSPACE} element={<MrvVerificationWorkspacePage />} />
+        <Route path={ROUTES.EVIDENCE} element={<UploadMrvEvidencePage />} />
+        <Route path={ROUTES.ORGANIZATIONS} element={<OrganizationsPage />} />
+        <Route path={ROUTES.ORGANIZATION_DETAIL} element={<OrganizationsPage />} />
+        <Route path={ROUTES.CARBON_CREDITS} element={<CarbonCreditsPage />} />
+        <Route path={ROUTES.CARBON_CREDIT_DETAIL} element={<CarbonCreditDetailPage />} />
+        <Route path={ROUTES.BLOCKCHAIN_REGISTRY} element={<BlockchainRecordsPage />} />
+        <Route path={ROUTES.BLOCKCHAIN_DETAIL} element={<BlockchainRecordDetailPage />} />
+        <Route path={ROUTES.DRONE_SENSOR_DATA} element={<DroneSensorDataPage />} />
+        <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
+        <Route path={ROUTES.REPORT_DETAIL} element={<ReportDetailPage />} />
+        <Route path={ROUTES.AUDIT_TRAIL} element={<AuditTrailPage />} />
+        <Route path={ROUTES.AUDIT_DETAIL} element={<AuditTrailDetailPage />} />
+        <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
+
+        {/* National Governance & Deep Audit Sub-routes */}
         <Route path={ROUTES.ADMIN_GOVERNANCE} element={<NationalGovernancePage />} />
         <Route path="/governance" element={<NationalGovernancePage />} />
         <Route path={ROUTES.ADMIN_NATIONAL_MAP} element={<NationalMapExplorerPage />} />
         <Route path="/national-map" element={<NationalMapExplorerPage />} />
         <Route path={ROUTES.ADMIN_GOVERNANCE_QUEUES} element={<GovernanceQueuesPage />} />
         <Route path="/governance/queues" element={<GovernanceQueuesPage />} />
-        <Route path={ROUTES.ADMIN_PROJECTS} element={<ProjectsPage />} />
-        <Route path={ROUTES.ADMIN_PROJECT_NEW} element={<ProjectFormPage />} />
-        <Route path={ROUTES.ADMIN_PROJECT_DETAIL} element={<ProjectDetailPage />} />
-        <Route path={ROUTES.ADMIN_MRV} element={<Navigate to={ROUTES.ADMIN_MRV_WORKSPACE.replace(':projectId', 'PRJ-2023-089')} replace />} />
+        <Route path={ROUTES.ADMIN_MRV} element={<Navigate to={ROUTES.MRV_WORKSPACE.replace(':projectId', 'PRJ-2023-089')} replace />} />
         <Route path={ROUTES.ADMIN_MRV_UPLOAD} element={<UploadMrvEvidencePage />} />
-        <Route path={ROUTES.ADMIN_MRV_PROJECT_VERIFICATION} element={<ProjectVerificationPage />} />
-        <Route path={ROUTES.ADMIN_MRV_WORKSPACE} element={<MrvVerificationWorkspacePage />} />
         <Route path="/mrv/blockchain/:submissionId" element={<MrvBlockchainAnchorPage />} />
-        <Route path={ROUTES.ADMIN_ORGANIZATIONS} element={<OrganizationsPage />} />
-        <Route path={ROUTES.ADMIN_ORGANIZATION_DETAIL} element={<OrganizationsPage />} />
-        <Route path={ROUTES.ADMIN_CARBON_CREDITS} element={<CarbonCreditsPage />} />
-        <Route path={ROUTES.ADMIN_CARBON_CREDIT_DETAIL} element={<CarbonCreditDetailPage />} />
-        <Route path={ROUTES.ADMIN_BLOCKCHAIN} element={<BlockchainRecordsPage />} />
-        <Route path="/admin/blockchain/:id" element={<BlockchainRecordDetailPage />} />
-        <Route path="/carbon-credits" element={<CarbonCreditsPage />} />
-        <Route path="/carbon-credits/:id" element={<CarbonCreditDetailPage />} />
         <Route path="/blockchain" element={<BlockchainRecordsPage />} />
         <Route path="/blockchain/:id" element={<BlockchainRecordDetailPage />} />
+        <Route path="/admin/blockchain/:id" element={<BlockchainRecordDetailPage />} />
         <Route path={ROUTES.ADMIN_OCR_REVIEW} element={<OcrReviewWorkspace />} />
         <Route path="/mrv/ocr" element={<OcrReviewWorkspace />} />
         <Route path={ROUTES.ADMIN_SENSORS} element={<SensorRegistryView />} />
@@ -88,9 +100,7 @@ export default function AppRoutes() {
         <Route path="/mrv/intelligence" element={<MrvIntelligenceDashboard />} />
         <Route path={ROUTES.ADMIN_MRV_ANOMALIES} element={<MrvAnomalyMatrix />} />
         <Route path="/mrv/anomalies" element={<MrvAnomalyMatrix />} />
-        <Route path={ROUTES.ADMIN_REPORTS} element={<ReportsPage />} />
         <Route path="/admin/reports/:id" element={<ReportDetailPage />} />
-        <Route path={ROUTES.ADMIN_AUDIT} element={<AuditTrailPage />} />
         <Route path="/admin/audit/:id" element={<AuditTrailDetailPage />} />
         <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
       </Route>

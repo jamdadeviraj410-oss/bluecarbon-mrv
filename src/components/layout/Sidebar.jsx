@@ -30,66 +30,40 @@ export default function Sidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const isAdmin = user?.role === ROLES.NCCR_ADMIN;
-  const isVerifier = user?.role === ROLES.VERIFIER || user?.role === 'AUDITOR';
-  const isOrg = user?.role === ROLES.NGO || user?.role === ROLES.PANCHAYAT || user?.role === ROLES.PROJECT_MANAGER || user?.role === 'ORG_ADMIN';
-  const isCommunity = user?.role === ROLES.COMMUNITY || user?.role === 'COMMUNITY_USER';
+  const isCommunity = user?.role === ROLES.COMMUNITY;
 
-  const adminLinks = [
-    { icon: 'dashboard', label: 'National Dashboard', to: ROUTES.ADMIN_DASHBOARD },
-    { icon: 'gavel', label: 'National Governance', to: ROUTES.ADMIN_GOVERNANCE },
-    { icon: 'map', label: 'National Map Explorer', to: ROUTES.ADMIN_NATIONAL_MAP },
-    { icon: 'fact_check', label: 'Governance Queues', to: ROUTES.ADMIN_GOVERNANCE_QUEUES },
-    { icon: 'forest', label: 'Projects', to: ROUTES.ADMIN_PROJECTS },
-    { icon: 'verified', label: 'MRV Verification', to: ROUTES.ADMIN_MRV_WORKSPACE.replace(':projectId', 'PRJ-2023-089'), basePath: '/mrv/workspace' },
-    { icon: 'psychology', label: 'MRV Intelligence', to: ROUTES.ADMIN_MRV_INTELLIGENCE },
-    { icon: 'document_scanner', label: 'OCR Document Review', to: ROUTES.ADMIN_OCR_REVIEW },
-    { icon: 'sensors', label: 'IoT Sensor Registry', to: ROUTES.ADMIN_SENSORS },
-    { icon: 'flight', label: 'Drone Canopy Survey', to: ROUTES.ADMIN_DRONE },
-    { icon: 'corporate_fare', label: 'Organizations', to: ROUTES.ADMIN_ORGANIZATIONS },
-    { icon: 'workspace_premium', label: 'Carbon Credits', to: ROUTES.ADMIN_CARBON_CREDITS },
-    { icon: 'link', label: 'Blockchain Registry', to: ROUTES.ADMIN_BLOCKCHAIN },
-    { icon: 'assessment', label: 'Reports', to: ROUTES.ADMIN_REPORTS },
-    { icon: 'history', label: 'Audit Trail', to: ROUTES.ADMIN_AUDIT },
-    { icon: 'settings', label: 'Settings', to: ROUTES.ADMIN_SETTINGS },
+  // Stitch Source of Truth: Canonical Marine Ledger Navigation
+  const marineLedgerLinks = [
+    { icon: 'dashboard', label: 'Dashboard', to: ROUTES.DASHBOARD, basePath: '/dashboard' },
+    { icon: 'forest', label: 'Projects', to: ROUTES.PROJECTS, basePath: '/projects' },
+    { icon: 'verified', label: 'MRV Verification', to: ROUTES.MRV_VERIFICATION, basePath: '/mrv' },
+    { icon: 'upload_file', label: 'Evidence Upload', to: ROUTES.EVIDENCE, basePath: '/evidence' },
+    { icon: 'corporate_fare', label: 'Organizations', to: ROUTES.ORGANIZATIONS, basePath: '/organizations' },
+    { icon: 'workspace_premium', label: 'Carbon Credits', to: ROUTES.CARBON_CREDITS, basePath: '/carbon-credits' },
+    { icon: 'link', label: 'Blockchain Registry', to: ROUTES.BLOCKCHAIN_REGISTRY, basePath: '/blockchain' },
+    { icon: 'sensors', label: 'Drone & Sensor Data', to: ROUTES.DRONE_SENSOR_DATA, basePath: '/drone-sensor-data' },
+    { icon: 'assessment', label: 'Reports', to: ROUTES.REPORTS, basePath: '/reports' },
+    { icon: 'history', label: 'Audit Trail', to: ROUTES.AUDIT_TRAIL, basePath: '/audit' },
+    { icon: 'settings', label: 'Settings', to: ROUTES.SETTINGS, basePath: '/settings' },
   ];
 
-  const verifierLinks = [
-    { icon: 'verified', label: 'MRV Verification Workspace', to: ROUTES.ADMIN_MRV_WORKSPACE.replace(':projectId', 'PRJ-2023-089'), basePath: '/mrv/workspace' },
-    { icon: 'forest', label: 'Projects Registry', to: ROUTES.ADMIN_PROJECTS },
-    { icon: 'psychology', label: 'MRV Anomaly Matrix', to: ROUTES.ADMIN_MRV_ANOMALIES },
-    { icon: 'document_scanner', label: 'OCR Evidence Review', to: ROUTES.ADMIN_OCR_REVIEW },
-    { icon: 'sensors', label: 'Sensor Telemetry', to: ROUTES.ADMIN_SENSORS },
-    { icon: 'flight', label: 'Drone Orthomosaics', to: ROUTES.ADMIN_DRONE },
-    { icon: 'link', label: 'Blockchain Verifications', to: ROUTES.ADMIN_BLOCKCHAIN },
-    { icon: 'assessment', label: 'Verification Reports', to: ROUTES.ADMIN_REPORTS },
-    { icon: 'history', label: 'Audit Log', to: ROUTES.ADMIN_AUDIT },
-  ];
-
-  const orgLinks = [
-    { icon: 'dashboard', label: 'Organization Dashboard', to: ROUTES.ORG_DASHBOARD },
-    { icon: 'forest', label: 'My Projects', to: ROUTES.ORG_PROJECTS },
-    { icon: 'add_circle', label: 'Register New Project', to: ROUTES.ORG_CREATE_PROJECT },
-    { icon: 'upload_file', label: 'Upload Field Evidence', to: ROUTES.ORG_UPLOAD_EVIDENCE },
-    { icon: 'public', label: 'Public Registry', to: ROUTES.PUBLIC_REGISTRY },
-    { icon: 'settings', label: 'Settings', to: ROUTES.ORG_SETTINGS },
-  ];
-
+  // Community Portal Navigation
   const communityLinks = [
     { icon: 'dashboard', label: 'Community Dashboard', to: ROUTES.COMMUNITY_DASHBOARD },
     { icon: 'diversity_3', label: 'Community Portal & Logs', to: ROUTES.COMMUNITY_PORTAL },
     { icon: 'public', label: 'Public Registry', to: ROUTES.PUBLIC_REGISTRY },
   ];
 
-  const links = isAdmin
-    ? adminLinks
-    : isVerifier
-    ? verifierLinks
-    : isOrg
-    ? orgLinks
-    : isCommunity
-    ? communityLinks
-    : adminLinks;
+  const links = isCommunity ? communityLinks : marineLedgerLinks;
+
+  const isItemActive = (link) => {
+    if (currentPath === link.to) return true;
+    if (link.to !== '/' && currentPath.startsWith(link.to + '/')) return true;
+    if (link.basePath && (currentPath === link.basePath || currentPath.startsWith(link.basePath + '/'))) return true;
+    // Special alias matching for dashboard
+    if (link.to === ROUTES.DASHBOARD && (currentPath === '/admin/dashboard' || currentPath === '/organization/dashboard')) return true;
+    return false;
+  };
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[var(--sidebar-width)] bg-primary text-on-primary flex flex-col z-40 border-r border-outline/20">
@@ -105,7 +79,7 @@ export default function Sidebar() {
 
       <div className="flex-1 overflow-y-auto py-5 px-3 flex flex-col gap-1 scrollbar-thin">
         <div className="px-3 mb-1 text-[11px] font-label-md uppercase tracking-wider text-primary-fixed-dim">
-          {isAdmin ? 'NATIONAL GOVERNANCE' : isVerifier ? 'VERIFICATION PORTAL' : isOrg ? 'ORGANIZATION WORKSPACE' : 'COMMUNITY PORTAL'}
+          {isCommunity ? 'COMMUNITY PORTAL' : 'MARINE LEDGER'}
         </div>
         {links.map((link) => (
           <SidebarItem
@@ -114,11 +88,7 @@ export default function Sidebar() {
             label={link.label}
             to={link.to}
             badge={link.badge}
-            active={
-              currentPath === link.to ||
-              (link.to !== '/' && currentPath.startsWith(link.to + '/')) ||
-              (link.basePath && currentPath.startsWith(link.basePath))
-            }
+            active={isItemActive(link)}
           />
         ))}
       </div>
@@ -130,12 +100,12 @@ export default function Sidebar() {
           </div>
           <div className="flex flex-col flex-1 min-w-0">
             <span className="font-title-md text-xs font-bold truncate text-on-primary">{user?.name || 'User'}</span>
-            <span className="font-body-md text-[11px] text-on-primary/70 truncate">{user?.organization || 'Registrar'}</span>
+            <span className="font-body-md text-[11px] text-on-primary/70 truncate">{user?.organization || (isCommunity ? 'Community' : 'Registrar')}</span>
           </div>
         </div>
         <button
           onClick={logout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-error hover:bg-error/10 transition-colors font-title-md text-xs font-bold"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-error hover:bg-error/10 transition-colors font-title-md text-xs font-bold cursor-pointer"
         >
           <span className="material-symbols-outlined text-[18px]">logout</span>
           <span>Sign Out</span>

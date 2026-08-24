@@ -14,6 +14,7 @@ try {
 import { runMrvIntelligenceTests } from './mrv_intelligence.test.js';
 import { runBlockchainProvenanceTests } from './blockchain_provenance.test.js';
 import { runAuthRbacTests } from './auth_rbac_onboarding.test.js';
+import { runReconciliationTests } from './marine_ledger_reconciliation.test.js';
 
 async function main() {
   console.log('==================================================');
@@ -74,6 +75,24 @@ async function main() {
     });
   } catch (err) {
     console.error('  [ERROR] Auth & RBAC tests failed with exception:', err);
+    totalFailed++;
+  }
+
+  // 4. Marine Ledger & Stitch Reconciliation Tests
+  console.log('\n--- 4. MARINE LEDGER & STITCH RECONCILIATION SUITE ---');
+  try {
+    const results4 = await runReconciliationTests();
+    results4.forEach((r, idx) => {
+      if (r.passed) {
+        console.log(`  [PASS] 4.${idx + 1} ${r.name}`);
+        totalPassed++;
+      } else {
+        console.error(`  [FAIL] 4.${idx + 1} ${r.name} - ${r.error}`);
+        totalFailed++;
+      }
+    });
+  } catch (err) {
+    console.error('  [ERROR] Marine Ledger reconciliation tests failed with exception:', err);
     totalFailed++;
   }
 

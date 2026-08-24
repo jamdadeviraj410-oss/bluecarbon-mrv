@@ -55,7 +55,29 @@ export const ROUTES = {
   FORGOT_PASSWORD: '/forgot-password',
   ACCESS_RESTRICTED: '/access-restricted',
 
-  // NCCR National Governance & Admin
+  // Canonical Marine Ledger Internal / Admin Routes (Stitch Source of Truth)
+  DASHBOARD: '/dashboard',
+  PROJECTS: '/projects',
+  PROJECT_NEW: '/projects/new',
+  PROJECT_DETAIL: '/projects/:id',
+  MRV_VERIFICATION: '/mrv-verification',
+  MRV_PROJECT_VERIFICATION: '/mrv/project-verification/:verificationId',
+  MRV_WORKSPACE: '/mrv/workspace/:projectId',
+  EVIDENCE: '/evidence',
+  ORGANIZATIONS: '/organizations',
+  ORGANIZATION_DETAIL: '/organizations/:id',
+  CARBON_CREDITS: '/carbon-credits',
+  CARBON_CREDIT_DETAIL: '/carbon-credits/:id',
+  BLOCKCHAIN_REGISTRY: '/blockchain-registry',
+  BLOCKCHAIN_DETAIL: '/blockchain/:id',
+  DRONE_SENSOR_DATA: '/drone-sensor-data',
+  REPORTS: '/reports',
+  REPORT_DETAIL: '/reports/:id',
+  AUDIT_TRAIL: '/audit-trail',
+  AUDIT_DETAIL: '/audit-trail/:id',
+  SETTINGS: '/settings',
+
+  // Legacy / Feature Specific Aliases
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_GOVERNANCE: '/admin/governance',
   ADMIN_NATIONAL_MAP: '/admin/national-map',
