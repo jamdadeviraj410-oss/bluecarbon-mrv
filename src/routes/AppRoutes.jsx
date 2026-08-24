@@ -16,6 +16,7 @@ import UploadMrvEvidencePage from '../features/mrv/pages/UploadMrvEvidencePage';
 import ProjectVerificationPage from '../features/mrv/pages/ProjectVerificationPage';
 import MrvVerificationWorkspacePage from '../features/mrv/pages/MrvVerificationWorkspacePage';
 import MrvBlockchainAnchorPage from '../features/mrv/pages/MrvBlockchainAnchorPage';
+import { MrvIntelligenceDashboard } from '../features/mrvIntelligence';
 import { BlockchainRecordsPage, BlockchainRecordDetailPage } from '../features/blockchain';
 import { CarbonCreditsPage, CarbonCreditDetailPage } from '../features/carbonCredits';
 import { ReportsPage, ReportDetailPage } from '../features/reports';
@@ -39,6 +40,12 @@ export default function AppRoutes() {
         <Route path={ROUTES.ADMIN_PROJECT_NEW} element={<ProjectFormPage />} />
         <Route path={ROUTES.ADMIN_PROJECT_DETAIL} element={<ProjectDetailPage />} />
         <Route path={ROUTES.ADMIN_MRV} element={<Navigate to={ROUTES.ADMIN_MRV_WORKSPACE.replace(':projectId', 'PRJ-2023-089')} replace />} />
+        <Route path={ROUTES.ADMIN_MRV_INTELLIGENCE} element={<MrvIntelligenceDashboard />} />
+        <Route path="/mrv/intelligence" element={<MrvIntelligenceDashboard />} />
+        <Route path="/mrv/ocr" element={<MrvIntelligenceDashboard />} />
+        <Route path="/mrv/sensors" element={<MrvIntelligenceDashboard />} />
+        <Route path="/mrv/drone" element={<MrvIntelligenceDashboard />} />
+        <Route path="/mrv/anomalies" element={<MrvIntelligenceDashboard />} />
         <Route path={ROUTES.ADMIN_MRV_UPLOAD} element={<UploadMrvEvidencePage />} />
         <Route path={ROUTES.ADMIN_MRV_PROJECT_VERIFICATION} element={<ProjectVerificationPage />} />
         <Route path={ROUTES.ADMIN_MRV_WORKSPACE} element={<MrvVerificationWorkspacePage />} />

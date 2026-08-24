@@ -29,6 +29,7 @@ export default function Sidebar() {
   const adminLinks = [
     { icon: 'dashboard', label: 'Dashboard', to: ROUTES.ADMIN_DASHBOARD },
     { icon: 'forest', label: 'Projects', to: ROUTES.ADMIN_PROJECTS },
+    { icon: 'troubleshoot', label: 'MRV Intelligence', to: ROUTES.ADMIN_MRV_INTELLIGENCE, basePath: '/admin/mrv-intelligence' },
     { icon: 'verified', label: 'MRV Verification', to: ROUTES.ADMIN_MRV_WORKSPACE.replace(':projectId', 'PRJ-2023-089'), basePath: '/mrv/workspace' },
     { icon: 'upload_file', label: 'Evidence Upload', to: ROUTES.ADMIN_MRV_UPLOAD },
     { icon: 'corporate_fare', label: 'Organizations', to: ROUTES.ADMIN_ORGANIZATIONS },
