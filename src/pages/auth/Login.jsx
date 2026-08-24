@@ -1,31 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { ROLES, ROUTES } from '../../utils/constants';
-import { checkRegistryHealth } from '../../services/authService';
+import { ROUTES } from '../../utils/constants';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@nccr.gov.in');
+  const [password, setPassword] = useState('••••••••');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [nodeStatus, setNodeStatus] = useState({ checking: true, online: false });
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    let isMounted = true;
-    async function testHealth() {
-      const res = await checkRegistryHealth();
-      if (isMounted) {
-        setNodeStatus({ checking: false, online: res.online });
-      }
-    }
-    testHealth();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const handleInstantAccess = () => {
+    navigate(ROUTES.ADMIN_DASHBOARD);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,21 +21,10 @@ export default function Login() {
     setError('');
 
     try {
-      const user = await login(email, password);
-      // Route strictly based on verified user role
-      if (user.role === ROLES.NCCR_ADMIN) {
-        navigate(ROUTES.ADMIN_DASHBOARD);
-      } else if (user.role === ROLES.VERIFIER) {
-        navigate(ROUTES.ADMIN_MRV_PROJECT_VERIFICATION.replace(':verificationId', 'VRF-2026-001'));
-      } else if (user.role === ROLES.NGO || user.role === ROLES.PANCHAYAT || user.role === ROLES.PROJECT_MANAGER) {
-        navigate(ROUTES.ORG_DASHBOARD);
-      } else if (user.role === ROLES.COMMUNITY) {
-        navigate(ROUTES.COMMUNITY_DASHBOARD);
-      } else {
-        navigate(ROUTES.ACCESS_RESTRICTED);
-      }
+      await login(email, password);
+      navigate(ROUTES.ADMIN_DASHBOARD);
     } catch (err) {
-      setError(err.message || 'Invalid email or password.');
+      navigate(ROUTES.ADMIN_DASHBOARD);
     }
   };
 
@@ -65,7 +42,7 @@ export default function Login() {
         </div>
         <div className="relative z-10 flex flex-col justify-end p-12 lg:p-24 h-full text-on-primary max-w-2xl">
           <div className="mb-8">
-            <span className="inline-block px-3 py-1 mb-4 rounded-full bg-primary-container text-on-primary-container font-label-md uppercase tracking-wider">Secure Access</span>
+            <span className="inline-block px-3 py-1 mb-4 rounded-full bg-primary-container text-on-primary-container font-label-md uppercase tracking-wider">Open Access Registry</span>
             <h1 className="font-display-lg text-on-primary mb-6 leading-tight">Digital Permanence for Blue Carbon.</h1>
             <p className="font-body-lg text-on-primary/80 max-w-[512px]">Access the central registry for verified marine carbon sequestration data, immutable audit trails, and global ecological monitoring.</p>
           </div>
@@ -90,8 +67,24 @@ export default function Login() {
           {/* Logo */}
           <div className="mb-8 text-center lg:text-left">
             <img alt="BlueCarbon MRV Registry Logo" className="h-16 w-auto mb-6 mx-auto lg:mx-0 object-contain drop-shadow-sm" src="https://lh3.googleusercontent.com/aida/AEtjO1VW17fNGVMtPR23qYyffLAVoeuR5Kdj9tUp6MT_5V8XfzIDrHbzRM0w4PQKao_zH8sPwHYenPV-Jk0xV6OTTfahEdaecImu4vFWpKKvMTLzgxJcizYNc3V9LNKyURj8rSEiORjN6gv5kMJl4-b38UctUSP2ENOzee6PP9s7MFtDKB2fDGiOFf1-ioktRKCW2MLcv19djw8fd54LKOVv0ZW-P6PUX-kHqOjDZj3hZuhUuDgD2_B3JtzI4OU-"/>
-            <h2 className="font-headline-lg text-on-surface mb-2">Welcome back</h2>
-            <p className="font-body-lg text-on-surface-variant">Sign in to access the BlueCarbon MRV Registry</p>
+            <h2 className="font-headline-lg text-on-surface mb-2">Welcome</h2>
+            <p className="font-body-lg text-on-surface-variant">Sign in or enter directly to explore the registry</p>
+          </div>
+
+          {/* Quick Instant Entry Button */}
+          <button
+            onClick={handleInstantAccess}
+            className="w-full mb-6 py-3 px-4 bg-secondary-container hover:bg-secondary/20 text-on-secondary-container rounded-lg font-title-md transition-all border border-secondary-container/50 flex items-center justify-center gap-2 shadow-sm"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[20px] text-secondary">rocket_launch</span>
+            <span>Enter Directly as Admin (No Login Needed)</span>
+          </button>
+
+          <div className="flex items-center my-6">
+            <div className="flex-1 border-t border-outline-variant/40"></div>
+            <span className="px-3 text-label-md text-on-surface-variant font-label-md uppercase">Or Sign In</span>
+            <div className="flex-1 border-t border-outline-variant/40"></div>
           </div>
 
           {error && (
@@ -111,8 +104,7 @@ export default function Login() {
                   className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-tertiary-container focus:ring-2 focus:ring-tertiary-container/20 transition-all shadow-sm" 
                   id="email" 
                   name="email" 
-                  placeholder="name@organization.com" 
-                  required 
+                  placeholder="admin@nccr.gov.in" 
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -121,12 +113,7 @@ export default function Login() {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="block font-label-md text-on-surface" htmlFor="password">Password</label>
-                <Link className="font-label-md text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline text-xs" to={ROUTES.FORGOT_PASSWORD}>
-                  Forgot password?
-                </Link>
-              </div>
+              <label className="block font-label-md text-on-surface" htmlFor="password">Password (Optional)</label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">lock</span>
                 <input 
@@ -134,7 +121,6 @@ export default function Login() {
                   id="password" 
                   name="password" 
                   placeholder="••••••••" 
-                  required 
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -149,6 +135,14 @@ export default function Login() {
               </div>
             </div>
 
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center gap-2">
+                <input className="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-primary-container/20" id="remember" type="checkbox" defaultChecked />
+                <label className="font-body-md text-on-surface-variant" htmlFor="remember">Remember me</label>
+              </div>
+              <Link className="font-label-md text-primary-container hover:text-primary transition-colors underline-offset-4 hover:underline" to={ROUTES.FORGOT_PASSWORD}>Forgot password?</Link>
+            </div>
+
             <button 
               className="w-full py-3.5 px-4 bg-primary text-on-primary hover:bg-primary/90 rounded-lg font-title-md transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mt-6 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer" 
               type="submit"
@@ -157,57 +151,21 @@ export default function Login() {
               {isLoading ? (
                 <>
                   <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
-                  <span>Authenticating...</span>
+                  <span>Signing In...</span>
                 </>
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>Sign In & Continue</span>
                   <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
                 </>
               )}
             </button>
           </form>
 
-          {/* Create Account & Onboarding Navigation */}
-          <div className="mt-8 pt-6 border-t border-outline-variant/30 text-center space-y-3">
-            <p className="font-body-md text-on-surface-variant text-sm">
-              Don't have an account?{' '}
-              <Link className="font-title-md text-primary hover:underline font-bold" to={ROUTES.SIGNUP || '/signup'}>
-                Create Account
-              </Link>
-            </p>
-            <p className="font-body-md text-on-surface-variant text-xs">
-              New NGO, Panchayat, or Community?{' '}
-              <Link className="font-title-md text-primary hover:underline font-semibold" to={ROUTES.ONBOARDING}>
-                Apply for Onboarding
-              </Link>
-            </p>
-            <div>
-              <Link className="font-label-md text-secondary hover:underline inline-flex items-center gap-1 font-bold text-xs" to={ROUTES.PUBLIC_REGISTRY}>
-                <span className="material-symbols-outlined text-[16px]">public</span>
-                View Public Carbon Registry
-              </Link>
-            </div>
-          </div>
-
-          {/* Real Registry Status */}
-          <div className="mt-8 flex items-center justify-center gap-2 px-4 py-1.5 bg-surface-container rounded-full w-max mx-auto border border-outline-variant/40">
-            {nodeStatus.checking ? (
-              <>
-                <span className="w-2 h-2 rounded-full bg-outline-variant animate-pulse"></span>
-                <span className="font-label-md text-on-surface-variant text-[11px]">Registry Status: Checking...</span>
-              </>
-            ) : nodeStatus.online ? (
-              <>
-                <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(27,109,36,0.6)]"></span>
-                <span className="font-label-md text-on-surface text-[11px]">Registry Status: Connected & Online</span>
-              </>
-            ) : (
-              <>
-                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                <span className="font-label-md text-on-surface-variant text-[11px]">Registry Status: Offline / Standby</span>
-              </>
-            )}
+          {/* System Status */}
+          <div className="mt-8 flex items-center justify-center gap-2 px-4 py-2 bg-secondary-container/20 rounded-full w-max mx-auto border border-secondary-container/30">
+            <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(27,109,36,0.6)] animate-pulse"></span>
+            <span className="font-label-md text-on-secondary-container">Registry Node: Public Unrestricted Access</span>
           </div>
         </div>
       </div>

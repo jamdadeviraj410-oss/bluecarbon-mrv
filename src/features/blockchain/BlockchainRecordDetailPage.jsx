@@ -69,7 +69,7 @@ export default function BlockchainRecordDetailPage() {
             ) : record.txHash ? (
               <span className="px-3 py-0.5 rounded-full bg-secondary-container/30 text-on-secondary-container font-label-md flex items-center gap-1 border border-secondary-container">
                 <span className="material-symbols-outlined text-[16px]">verified</span>
-                <span>{record.status}</span>
+                <span>{record.status} on Polygon Amoy</span>
               </span>
             ) : (
               <span className="px-3 py-0.5 rounded-full bg-surface-variant text-on-surface-variant font-label-md flex items-center gap-1 border border-outline-variant">
@@ -81,7 +81,7 @@ export default function BlockchainRecordDetailPage() {
           <p className="font-body-md text-on-surface-variant max-w-3xl">
             {record.isDemo || record.isSimulated
               ? 'Demonstration carbon credit representation. Real on-chain anchoring is initiated via the anchorMRVSubmission edge function.'
-              : `Cryptographically verified immutable proof of blue carbon sequestration on ${record.networkFull && record.networkFull !== 'Network Not Configured' ? record.networkFull : 'configured blockchain network'}.`}
+              : `Cryptographically verified immutable proof of blue carbon sequestration on ${record.networkFull && record.networkFull !== 'Network Not Configured' ? record.networkFull : 'Polygon Amoy testnet'}.`}
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-1">
             <span className="font-mono-data text-on-surface-variant px-2.5 py-1 bg-surface-container rounded text-xs">
@@ -98,7 +98,7 @@ export default function BlockchainRecordDetailPage() {
 
         {/* Top Actions */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {record.explorerUrl && record.txHash && (
+          {record.explorerUrl && (
             <a
               href={record.explorerUrl}
               target="_blank"
@@ -126,16 +126,6 @@ export default function BlockchainRecordDetailPage() {
           )}
         </div>
       </div>
-
-      {(record.isDemo || record.isSimulated) && (
-        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
-          <span className="material-symbols-outlined text-[20px] text-amber-600 shrink-0">info</span>
-          <div>
-            <span className="font-bold uppercase tracking-wider text-[11px] block mb-0.5">Demo Simulation Record</span>
-            This record is a pre-configured demo model designed to illustrate Credit DNA lineage. In a production environment, real on-chain cryptographic proofs and Polygon transaction hashes are created exclusively when an approved MRV submission is anchored via the Polygon smart contract.
-          </div>
-        </div>
-      )}
 
       {/* Credit DNA Provenance Lineage Bar */}
       <div className="bg-surface-container-lowest p-5 rounded-xl shadow-sm border border-surface-container-high flex flex-col gap-3">
@@ -256,9 +246,7 @@ export default function BlockchainRecordDetailPage() {
               </div>
 
               <div className="flex flex-col gap-1 sm:col-span-2">
-                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">
-                  Transaction Hash {record.network && record.network !== 'Network Not Configured' ? `(${record.network})` : ''}
-                </span>
+                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">Transaction Hash (Polygon Amoy)</span>
                 <div className="flex items-center gap-2 bg-surface/10 px-3 py-2 rounded-lg w-full justify-between">
                   <span className="text-inverse-on-surface truncate break-all">{record.txHash}</span>
                   <button

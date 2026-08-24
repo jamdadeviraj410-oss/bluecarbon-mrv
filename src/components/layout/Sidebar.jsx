@@ -61,7 +61,7 @@ export default function Sidebar() {
     if (link.to !== '/' && currentPath.startsWith(link.to + '/')) return true;
     if (link.basePath && (currentPath === link.basePath || currentPath.startsWith(link.basePath + '/'))) return true;
     // Special alias matching for dashboard
-    if (link.to === ROUTES.DASHBOARD && (currentPath === '/admin/dashboard' || currentPath === '/organization/dashboard')) return true;
+    if (link.to === ROUTES.DASHBOARD && (currentPath === '/admin/dashboard' || currentPath === '/organization/dashboard' || currentPath === '/dashboard')) return true;
     return false;
   };
 
@@ -99,8 +99,8 @@ export default function Sidebar() {
             <span className="material-symbols-outlined text-[20px]">person</span>
           </div>
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="font-title-md text-xs font-bold truncate text-on-primary">{user?.name || 'User'}</span>
-            <span className="font-body-md text-[11px] text-on-primary/70 truncate">{user?.organization || (isCommunity ? 'Community' : 'Registrar')}</span>
+            <span className="font-title-md text-xs font-bold truncate text-on-primary">{user?.name || 'NCCR Admin'}</span>
+            <span className="font-body-md text-[11px] text-on-primary/70 truncate">{user?.organization || 'National Centre for Coastal Research'}</span>
           </div>
         </div>
         <button

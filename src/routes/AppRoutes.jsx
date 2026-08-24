@@ -38,8 +38,6 @@ import { DroneSensorDataPage } from '../features/droneSensorData';
 import { MrvIntelligenceDashboard, MrvAnomalyMatrix } from '../features/mrvIntelligence';
 import { SettingsPage } from '../features/settings';
 
-import { IS_UI_PREVIEW_MODE } from '../config/uiPreviewMode';
-
 export default function AppRoutes() {
   return (
     <Routes>
@@ -50,9 +48,9 @@ export default function AppRoutes() {
       <Route path={ROUTES.ACCESS_RESTRICTED} element={<AccessRestricted />} />
       <Route path={ROUTES.ONBOARDING} element={<OrganizationOnboardingPage />} />
       <Route path={ROUTES.ONBOARDING_STATUS} element={<OnboardingStatusPage />} />
-      <Route path="/" element={<Navigate to={IS_UI_PREVIEW_MODE ? ROUTES.DASHBOARD : ROUTES.LOGIN} replace />} />
+      <Route path="/" element={<Navigate to={ROUTES.DASHBOARD || ROUTES.ADMIN_DASHBOARD} replace />} />
 
-      {/* Canonical Marine Ledger & National Governance Routes (NCCR_ADMIN Only) */}
+      {/* Canonical Marine Ledger & National Governance Routes */}
       <Route element={<RoleRoute allowedRoles={[ROLES.NCCR_ADMIN]}><AdminLayout /></RoleRoute>}>
         {/* Canonical Marine Ledger Routes */}
         <Route path={ROUTES.DASHBOARD} element={<AdminDashboard />} />
@@ -130,7 +128,7 @@ export default function AppRoutes() {
       </Route>
 
       <Route path={ROUTES.STATUS} element={<StatusTransitionPage />} />
-      <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
+      <Route path="*" element={<Navigate to={ROUTES.DASHBOARD || ROUTES.ADMIN_DASHBOARD} replace />} />
     </Routes>
   );
 }
