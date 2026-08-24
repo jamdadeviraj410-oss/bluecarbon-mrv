@@ -13,11 +13,11 @@ export default function BlockchainRecordsPage() {
   const [selectedNetwork, setSelectedNetwork] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedRecordId, setSelectedRecordId] = useState('CRD-2023-8921A');
+  const [selectedRecordId, setSelectedRecordId] = useState('BC-MH-2026-000184');
   const [copiedHash, setCopiedHash] = useState(null);
   const [copiedContract, setCopiedContract] = useState(false);
   const [copiedPanelHash, setCopiedPanelHash] = useState(false);
-  const [showExplorerModal, setShowExplorerModal] = useState(false);
+  const [showDnaModal, setShowDnaModal] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,7 +41,7 @@ export default function BlockchainRecordsPage() {
 
   const selectedRecord = useMemo(() => {
     return (
-      filteredRecords.find((r) => r.creditId === selectedRecordId) ||
+      filteredRecords.find((r) => r.creditId === selectedRecordId || r.provenanceId === selectedRecordId) ||
       filteredRecords[0] ||
       getBlockchainRecords()[0]
     );
@@ -69,7 +69,7 @@ export default function BlockchainRecordsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `bluecarbon-blockchain-registry-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `bluecarbon-mrv-provenance-${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -80,13 +80,18 @@ export default function BlockchainRecordsPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="flex flex-col gap-1.5 relative z-10">
-          <h1 className="font-headline-lg text-primary tracking-tight">Blockchain Carbon Registry</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-headline-lg text-primary tracking-tight">Blockchain Carbon Registry</h1>
+            <span className="px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container font-mono-data text-xs border border-secondary">
+              Polygon Amoy (Chain 80002)
+            </span>
+          </div>
           <p className="font-body-md text-on-surface-variant max-w-2xl">
-            Immutable record of verified blue-carbon credits. All transactions are cryptographically secured and permanently recorded on public ledger networks.
+            Immutable provenance and tamper-evident audit trail of verified blue carbon MRV records on Polygon Amoy.
           </p>
           <div className="inline-flex items-center gap-1.5 bg-surface-container-high px-3 py-1 rounded-full mt-1 shadow-sm w-fit">
             <span className="material-symbols-outlined text-secondary text-[16px] animate-pulse">verified_user</span>
-            <span className="font-label-md text-on-surface-variant uppercase tracking-wider text-[11px]">Data Integrity Verified</span>
+            <span className="font-label-md text-on-surface-variant uppercase tracking-wider text-[11px]">Cryptographic MRV Integrity Secured</span>
           </div>
         </div>
 
@@ -102,7 +107,7 @@ export default function BlockchainRecordsPage() {
                 setCurrentPage(1);
               }}
               className="pl-10 pr-3 py-2 bg-surface-container rounded-lg font-body-md text-on-surface placeholder-outline-variant focus:outline-none focus:ring-2 focus:ring-primary/20 w-full sm:w-64 shadow-sm transition-shadow border border-transparent focus:border-outline-variant"
-              placeholder="Search Txn Hash or ID"
+              placeholder="Search Txn, Hash, or ID"
             />
           </div>
 
@@ -129,7 +134,7 @@ export default function BlockchainRecordsPage() {
         </div>
       </div>
 
-      {/* Filter Dropdown Bar (Toggleable) */}
+      {/* Filter Dropdown Bar */}
       {showFilters && (
         <div className="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm flex flex-wrap items-center gap-4 animate-fadeIn">
           <div className="flex items-center gap-2">
@@ -143,9 +148,8 @@ export default function BlockchainRecordsPage() {
               className="bg-surface-container px-3 py-1.5 rounded-lg text-body-md font-body-md border border-outline-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <option value="All">All Networks</option>
-              <option value="Polygon">Polygon POS / Mainnet</option>
-              <option value="Ethereum">Ethereum Mainnet</option>
-              <option value="Celo">Celo Network</option>
+              <option value="Amoy">Polygon Amoy Testnet (80002)</option>
+              <option value="Polygon">Polygon POS</option>
             </select>
           </div>
 
@@ -186,9 +190,8 @@ export default function BlockchainRecordsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1 */}
         <div className="bg-surface-container-lowest p-4 lg:p-5 rounded-xl shadow-sm border-t-4 border-secondary flex flex-col gap-2 relative overflow-hidden group hover:shadow-md transition-shadow">
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary-container/30 rounded-full blur-2xl group-hover:scale-110 transition-transform"></div>
           <div className="flex items-center justify-between z-10">
-            <span className="font-label-md text-on-surface-variant uppercase tracking-wide">Total Credits Issued</span>
+            <span className="font-label-md text-on-surface-variant uppercase tracking-wide">Total Credits Anchored</span>
             <span className="material-symbols-outlined text-secondary bg-secondary-container/50 p-1.5 rounded-md text-[20px]">
               workspace_premium
             </span>
@@ -201,9 +204,8 @@ export default function BlockchainRecordsPage() {
 
         {/* Card 2 */}
         <div className="bg-surface-container-lowest p-4 lg:p-5 rounded-xl shadow-sm border-t-4 border-tertiary-fixed-dim flex flex-col gap-2 relative overflow-hidden group hover:shadow-md transition-shadow">
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-tertiary-container/10 rounded-full blur-2xl group-hover:scale-110 transition-transform"></div>
           <div className="flex items-center justify-between z-10">
-            <span className="font-label-md text-on-surface-variant uppercase tracking-wide">Total CO2e Tokenized</span>
+            <span className="font-label-md text-on-surface-variant uppercase tracking-wide">Total CO2e Verified</span>
             <span className="material-symbols-outlined text-tertiary-fixed-dim bg-tertiary-container/50 p-1.5 rounded-md text-on-tertiary text-[20px]">
               token
             </span>
@@ -211,12 +213,11 @@ export default function BlockchainRecordsPage() {
           <div className="font-headline-lg text-on-surface z-10 tracking-tight">
             {stats.totalCO2eTokenized} <span className="font-title-md text-on-surface-variant">tCO2e</span>
           </div>
-          <div className="font-body-md text-outline z-10 text-[13px]">across {stats.activeNetworksCount} active networks</div>
+          <div className="font-body-md text-outline z-10 text-[13px]">on Polygon Amoy Testnet</div>
         </div>
 
         {/* Card 3 */}
         <div className="bg-surface-container-lowest p-4 lg:p-5 rounded-xl shadow-sm border-t-4 border-primary flex flex-col gap-2 relative overflow-hidden group hover:shadow-md transition-shadow">
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary-container/20 rounded-full blur-2xl group-hover:scale-110 transition-transform"></div>
           <div className="flex items-center justify-between z-10">
             <span className="font-label-md text-on-surface-variant uppercase tracking-wide">Verified Projects</span>
             <span className="material-symbols-outlined text-primary bg-primary-container/30 p-1.5 rounded-md text-[20px]">
@@ -224,33 +225,32 @@ export default function BlockchainRecordsPage() {
             </span>
           </div>
           <div className="font-headline-lg text-on-surface z-10 tracking-tight">{stats.verifiedProjectsCount}</div>
-          <div className="font-body-md text-on-surface-variant z-10 text-[13px]">Global MRV locations</div>
+          <div className="font-body-md text-on-surface-variant z-10 text-[13px]">Full Lineage Available</div>
         </div>
 
         {/* Card 4 */}
         <div className="bg-surface-container-lowest p-4 lg:p-5 rounded-xl shadow-sm border-t-4 border-inverse-surface flex flex-col gap-2 relative overflow-hidden group hover:shadow-md transition-shadow">
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-inverse-surface/10 rounded-full blur-2xl group-hover:scale-110 transition-transform"></div>
           <div className="flex items-center justify-between z-10">
-            <span className="font-label-md text-on-surface-variant uppercase tracking-wide">Blockchain Txns</span>
+            <span className="font-label-md text-on-surface-variant uppercase tracking-wide">Ledger Transactions</span>
             <span className="material-symbols-outlined text-inverse-surface bg-inverse-on-surface p-1.5 rounded-md text-[20px]">
               dataset
             </span>
           </div>
           <div className="font-headline-lg text-on-surface z-10 tracking-tight">{stats.blockchainTxnsCount}</div>
           <div className="font-body-md text-secondary inline-flex items-center gap-1 z-10 text-[13px]">
-            <span className="material-symbols-outlined text-[16px]">sync</span> Synced {stats.lastSynced}
+            <span className="material-symbols-outlined text-[16px]">sync</span> {stats.lastSynced}
           </div>
         </div>
       </div>
 
-      {/* Main Content Layout (Master Table 2/3 + Sticky Detail Panel 1/3) */}
+      {/* Main Content Layout */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* Main Registry Table Area (Left 2/3) */}
         <div className="w-full lg:w-2/3 bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col border border-surface-container-high">
           <div className="px-6 py-4 border-b border-surface-container-high bg-surface flex justify-between items-center">
-            <h2 className="font-title-lg text-on-surface">Recent Issuances</h2>
+            <h2 className="font-title-lg text-on-surface">Provenanced Credit Registry</h2>
             <div className="flex gap-2">
-              <span className="font-label-md text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">
+              <span className="font-label-md text-on-surface-variant bg-surface-container px-3 py-1 rounded-full text-xs">
                 Showing {paginatedRecords.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}-{Math.min(currentPage * pageSize, filteredRecords.length)} of {filteredRecords.length}
               </span>
             </div>
@@ -260,7 +260,7 @@ export default function BlockchainRecordsPage() {
             <table className="w-full text-left border-collapse min-w-[640px]">
               <thead>
                 <tr className="bg-surface-container-low border-b border-surface-container-high">
-                  <th className="py-3 px-4 font-label-md text-on-surface-variant font-semibold whitespace-nowrap">Credit ID</th>
+                  <th className="py-3 px-4 font-label-md text-on-surface-variant font-semibold whitespace-nowrap">Provenance ID</th>
                   <th className="py-3 px-4 font-label-md text-on-surface-variant font-semibold whitespace-nowrap">Project</th>
                   <th className="py-3 px-4 font-label-md text-on-surface-variant font-semibold text-right whitespace-nowrap">tCO2e</th>
                   <th className="py-3 px-4 font-label-md text-on-surface-variant font-semibold whitespace-nowrap">Network</th>
@@ -292,7 +292,7 @@ export default function BlockchainRecordsPage() {
                         }`}
                       >
                         <td className="py-3.5 px-4">
-                          <span className={`font-mono-data font-semibold ${isSelected ? 'text-primary' : 'text-on-surface group-hover:text-primary group-hover:underline'}`}>
+                          <span className={`font-mono-data font-semibold text-xs ${isSelected ? 'text-primary' : 'text-on-surface group-hover:text-primary group-hover:underline'}`}>
                             {record.creditId}
                           </span>
                         </td>
@@ -311,7 +311,7 @@ export default function BlockchainRecordsPage() {
                             >
                               {record.networkSymbol}
                             </div>
-                            <span className="text-on-surface text-body-md">{record.network}</span>
+                            <span className="text-on-surface text-body-md text-xs">{record.network}</span>
                           </div>
                         </td>
                         <td className="py-3.5 px-4">
@@ -383,17 +383,17 @@ export default function BlockchainRecordsPage() {
             {/* Header / Banner Area */}
             <div className="p-5 lg:p-6 border-b border-surface-container-high bg-gradient-to-b from-primary/5 to-transparent relative z-10">
               <div className="flex justify-between items-start mb-2">
-                <div className="font-label-md text-on-surface-variant uppercase tracking-wider text-[11px]">Credit Detail</div>
+                <div className="font-label-md text-on-surface-variant uppercase tracking-wider text-[11px]">Credit DNA Profile</div>
                 <div className="bg-secondary-container/20 text-on-secondary-container px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase border border-secondary-container inline-flex items-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">verified</span>
-                  <span>Verified</span>
+                  <span>On-Chain Verified</span>
                 </div>
               </div>
-              <h3 className="font-headline-md text-on-surface font-mono-data tracking-tight text-xl">{selectedRecord.creditId}</h3>
+              <h3 className="font-headline-md text-on-surface font-mono-data tracking-tight text-lg">{selectedRecord.creditId}</h3>
               <p className="font-body-md text-primary font-semibold mt-1 line-clamp-1">{selectedRecord.projectName}</p>
               
               <div className="mt-4 bg-surface p-3 rounded-lg border border-surface-container-high flex items-center justify-between">
-                <span className="font-body-md text-on-surface-variant text-sm">Quantity Minted</span>
+                <span className="font-body-md text-on-surface-variant text-sm">Quantity Verified</span>
                 <span className="font-title-lg text-secondary font-mono-data text-base font-bold">
                   {formatNumber(selectedRecord.tCO2e)}{' '}
                   <span className="text-[12px] text-on-surface-variant font-body-md font-normal">tCO2e</span>
@@ -403,6 +403,22 @@ export default function BlockchainRecordsPage() {
 
             {/* Panel Body */}
             <div className="p-5 lg:p-6 flex-1 overflow-y-auto z-10 flex flex-col gap-5">
+              {/* Provenance Trace: Credit → Project → MRV → Verification → Evidence → Hash → Polygon */}
+              <div>
+                <h4 className="font-title-md text-on-surface mb-2 text-sm flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[18px] text-primary">alt_route</span>
+                  <span>Provenance Lineage Trace</span>
+                </h4>
+                <div className="bg-surface-container-low rounded-lg p-3 border border-outline-variant/30 flex flex-col gap-2 font-mono-data text-xs">
+                  {selectedRecord.dnaTrace.map((node, index) => (
+                    <div key={node.type} className="flex items-center justify-between text-[11px]">
+                      <span className="text-outline uppercase font-semibold">{index + 1}. {node.type}</span>
+                      <span className="text-primary font-medium truncate max-w-[170px]" title={node.code}>{node.code}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Metadata Grid */}
               <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm">
                 <div>
@@ -414,14 +430,12 @@ export default function BlockchainRecordsPage() {
                   <div className="font-body-md text-on-surface">{selectedRecord.issueDate}</div>
                 </div>
                 <div>
-                  <div className="font-label-md text-outline text-[11px] uppercase tracking-wider">Methodology</div>
-                  <div className="font-body-md text-on-surface">{selectedRecord.methodology}</div>
+                  <div className="font-label-md text-outline text-[11px] uppercase tracking-wider">MRV Package</div>
+                  <div className="font-body-md text-on-surface truncate">{selectedRecord.mrvCode}</div>
                 </div>
                 <div>
-                  <div className="font-label-md text-outline text-[11px] uppercase tracking-wider">Verification ID</div>
-                  <div className="font-mono-data text-primary text-[12px] hover:underline cursor-pointer truncate">
-                    {selectedRecord.verificationId}
-                  </div>
+                  <div className="font-label-md text-outline text-[11px] uppercase tracking-wider">Auditor</div>
+                  <div className="font-body-md text-on-surface truncate">{selectedRecord.auditor}</div>
                 </div>
               </div>
 
@@ -431,7 +445,7 @@ export default function BlockchainRecordsPage() {
               <div className="flex flex-col gap-2">
                 <h4 className="font-title-md text-on-surface mb-1 flex items-center gap-1.5 text-sm">
                   <span className="material-symbols-outlined text-[18px] text-outline">link</span>
-                  <span>On-Chain Record</span>
+                  <span>On-Chain Record Details</span>
                 </h4>
                 <div className="bg-surface-container rounded-lg p-3 flex flex-col gap-2 font-mono-data text-[12px]">
                   <div className="flex justify-between items-center">
@@ -456,7 +470,7 @@ export default function BlockchainRecordsPage() {
                     </button>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-outline">Block No.</span>
+                    <span className="text-outline">Block Height</span>
                     <span className="text-on-surface">{selectedRecord.blockNumber ? `#${selectedRecord.blockNumber}` : 'Pending...'}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-outline-variant/30">
@@ -475,157 +489,115 @@ export default function BlockchainRecordsPage() {
                   </div>
                 </div>
               </div>
-
-              <div className="h-px bg-surface-container-high w-full"></div>
-
-              {/* Lifecycle Timeline */}
-              <div>
-                <h4 className="font-title-md text-on-surface mb-3 text-sm">Issuance Lifecycle</h4>
-                <div className="flex flex-col gap-0 relative">
-                  {/* Vertical line connecting nodes */}
-                  <div className="absolute left-[15px] top-4 bottom-4 w-px bg-secondary-container z-0"></div>
-
-                  {selectedRecord.lifecycle.map((step) => {
-                    const isDone = step.status === 'completed';
-                    return (
-                      <div key={step.step} className="flex gap-3 items-start relative z-10 py-2">
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm ${
-                            isDone
-                              ? 'bg-secondary text-on-secondary'
-                              : 'bg-surface-variant text-on-surface-variant border border-outline-variant'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[16px]">{step.icon}</span>
-                        </div>
-                        <div className="pt-0.5 flex-1 min-w-0">
-                          <div className="font-title-md text-on-surface text-sm leading-tight truncate">{step.title}</div>
-                          <div className="font-label-md text-outline mt-0.5 text-[11px] truncate">
-                            {step.date} • {step.subtitle}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
 
             {/* Panel Actions */}
-            <div className="p-4 border-t border-surface-container-high bg-surface flex gap-2.5 z-10">
-              <button
-                onClick={() => navigate(`/admin/carbon-credits/${selectedRecord.creditId}`)}
-                className="flex-1 px-3 py-2 border border-outline text-on-surface font-title-md text-sm rounded-lg hover:bg-surface-container-low transition-colors text-center cursor-pointer"
-              >
-                View Certificate
-              </button>
-              <button
-                onClick={() => setShowExplorerModal(true)}
-                className="flex-1 px-3 py-2 bg-primary text-on-primary font-title-md text-sm rounded-lg hover:bg-primary-container transition-colors text-center inline-flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
-              >
-                <span>View Explorer</span>
-                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-              </button>
+            <div className="p-4 border-t border-surface-container-high bg-surface flex flex-col gap-2 z-10">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => navigate(`/admin/blockchain/${selectedRecord.creditId}`)}
+                  className="flex-1 px-3 py-2 bg-primary text-on-primary font-title-md text-sm rounded-lg hover:bg-primary-container transition-colors text-center inline-flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">biotech</span>
+                  <span>Inspect Credit DNA</span>
+                </button>
+                <button
+                  onClick={() => setShowDnaModal(true)}
+                  className="px-3 py-2 border border-outline text-on-surface font-title-md text-sm rounded-lg hover:bg-surface-container-low transition-colors text-center cursor-pointer"
+                  title="Quick View"
+                >
+                  <span className="material-symbols-outlined text-[16px]">visibility</span>
+                </button>
+              </div>
+              {selectedRecord.explorerUrl && (
+                <a
+                  href={selectedRecord.explorerUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full text-center text-xs text-primary hover:underline flex items-center justify-center gap-1"
+                >
+                  <span>Verify on Polygonscan Amoy</span>
+                  <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                </a>
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* Transparent by Design Section (MRV -> Calc -> Blockchain Flow) */}
-      <div className="mt-4 bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-surface-container-high flex flex-col md:flex-row gap-6 items-center">
-        <div className="flex-1 flex flex-col gap-2">
-          <h3 className="text-headline-md text-primary text-lg font-semibold">Transparent by Design</h3>
-          <p className="text-body-md text-on-surface-variant">
-            Every blue carbon credit issued on this platform is mathematically derived from rigorous MRV (Measurement, Reporting, and Verification) sensor data. This physical truth is inextricably linked to an immutable blockchain record, ensuring government-grade transparency and eliminating double-counting.
-          </p>
-        </div>
-        <div className="flex-1 flex items-center justify-between w-full p-4 bg-surface-container-low rounded-xl border border-outline-variant/30">
-          <div className="flex flex-col items-center gap-1.5 flex-1">
-            <div className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary shadow-sm">
-              <span className="material-symbols-outlined text-[20px]">sensors</span>
-            </div>
-            <span className="text-label-md text-center text-on-surface-variant font-medium">MRV Data</span>
-          </div>
-          <div className="w-8 h-[2px] bg-outline-variant"></div>
-          <div className="flex flex-col items-center gap-1.5 flex-1">
-            <div className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary shadow-sm">
-              <span className="material-symbols-outlined text-[20px]">calculate</span>
-            </div>
-            <span className="text-label-md text-center text-on-surface-variant font-medium">Calculation</span>
-          </div>
-          <div className="w-8 h-[2px] bg-outline-variant"></div>
-          <div className="flex flex-col items-center gap-1.5 flex-1">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-md">
-              <span className="material-symbols-outlined text-[20px]">hub</span>
-            </div>
-            <span className="text-label-md text-center text-primary font-bold">Blockchain</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Explorer Modal Simulation */}
-      {showExplorerModal && selectedRecord && (
+      {/* Credit DNA Quick Modal */}
+      {showDnaModal && selectedRecord && (
         <div className="fixed inset-0 bg-on-surface/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-surface-container-lowest rounded-2xl shadow-2xl max-w-2xl w-full border border-outline-variant/40 overflow-hidden flex flex-col animate-scaleUp">
+          <div className="bg-surface-container-lowest rounded-2xl shadow-2xl max-w-3xl w-full border border-outline-variant/40 overflow-hidden flex flex-col animate-scaleUp">
             <div className="p-5 border-b border-surface-container-high flex items-center justify-between bg-surface-container-low">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[24px]">lan</span>
-                <span className="font-title-lg text-primary">Blockchain Ledger Explorer</span>
+                <span className="material-symbols-outlined text-primary text-[24px]">biotech</span>
+                <span className="font-title-lg text-primary">Carbon Credit DNA & Provenance Fingerprint</span>
               </div>
               <button
-                onClick={() => setShowExplorerModal(false)}
+                onClick={() => setShowDnaModal(false)}
                 className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <div className="p-6 flex flex-col gap-4 font-mono-data text-xs overflow-y-auto max-h-[70vh]">
-              <div className="flex flex-col gap-1 bg-surface-container p-3 rounded-lg">
-                <span className="text-outline uppercase text-[10px]">Transaction Hash</span>
-                <span className="text-primary font-semibold break-all">{selectedRecord.txHash}</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-surface-container p-3 rounded-lg flex flex-col gap-1">
-                  <span className="text-outline uppercase text-[10px]">Status</span>
-                  <span className="text-secondary font-bold flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">check_circle</span> {selectedRecord.status}
-                  </span>
-                </div>
-                <div className="bg-surface-container p-3 rounded-lg flex flex-col gap-1">
-                  <span className="text-outline uppercase text-[10px]">Block Height</span>
-                  <span className="text-on-surface font-semibold">#{selectedRecord.blockNumber || 'Pending'}</span>
-                </div>
-                <div className="bg-surface-container p-3 rounded-lg flex flex-col gap-1">
-                  <span className="text-outline uppercase text-[10px]">Network</span>
-                  <span className="text-on-surface font-semibold">{selectedRecord.networkFull}</span>
-                </div>
-                <div className="bg-surface-container p-3 rounded-lg flex flex-col gap-1">
-                  <span className="text-outline uppercase text-[10px]">Gas Consumption</span>
-                  <span className="text-on-surface font-semibold">{selectedRecord.gasUsed}</span>
+            <div className="p-6 flex flex-col gap-4 font-mono-data text-xs overflow-y-auto max-h-[75vh]">
+              {/* DNA Flow */}
+              <div className="bg-surface-container p-4 rounded-xl flex flex-col gap-3">
+                <span className="text-outline uppercase text-[10px] font-bold">End-to-End Cryptographic Provenance Chain</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                  {selectedRecord.dnaTrace.map((node) => (
+                    <div key={node.type} className="p-2 bg-surface rounded border border-outline-variant/30 flex flex-col gap-0.5">
+                      <span className="text-secondary font-bold uppercase text-[9px]">{node.type}</span>
+                      <span className="text-on-surface font-semibold truncate">{node.code}</span>
+                      <span className="text-on-surface-variant text-[10px] truncate">{node.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1 bg-surface-container p-3 rounded-lg">
-                <span className="text-outline uppercase text-[10px]">Cryptographic Merkle Root</span>
-                <span className="text-on-surface-variant break-all">{selectedRecord.merkleRoot}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-surface-container p-3 rounded-lg flex flex-col gap-1">
+                  <span className="text-outline uppercase text-[10px]">Credit ID</span>
+                  <span className="text-primary font-bold">{selectedRecord.creditId}</span>
+                </div>
+                <div className="bg-surface-container p-3 rounded-lg flex flex-col gap-1">
+                  <span className="text-outline uppercase text-[10px]">MRV Package</span>
+                  <span className="text-on-surface font-bold">{selectedRecord.mrvCode}</span>
+                </div>
+                <div className="bg-surface-container p-3 rounded-lg flex flex-col gap-1">
+                  <span className="text-outline uppercase text-[10px]">Carbon Volume</span>
+                  <span className="text-secondary font-bold">{formatNumber(selectedRecord.tCO2e)} tCO2e</span>
+                </div>
+                <div className="bg-surface-container p-3 rounded-lg flex flex-col gap-1">
+                  <span className="text-outline uppercase text-[10px]">Auditor</span>
+                  <span className="text-on-surface font-bold">{selectedRecord.auditor}</span>
+                </div>
               </div>
 
               <div className="flex flex-col gap-1 bg-surface-container p-3 rounded-lg">
-                <span className="text-outline uppercase text-[10px]">Smart Contract Method Call</span>
+                <span className="text-outline uppercase text-[10px]">MRV Canonical SHA-256 Digest</span>
+                <span className="text-on-surface-variant break-all font-mono">{selectedRecord.mrvHash}</span>
+              </div>
+
+              <div className="flex flex-col gap-1 bg-surface-container p-3 rounded-lg">
+                <span className="text-outline uppercase text-[10px]">Smart Contract Method</span>
                 <span className="text-on-surface font-mono">
-                  mintBlueCarbonCredit(address recipient, uint256 amount, string creditId, string verificationProof)
+                  BlueCarbonMRVAnchor.anchorMRV(bytes32 dataHash, string recordId, uint256 carbonAmountCentiTonne)
                 </span>
               </div>
             </div>
 
             <div className="p-4 border-t border-surface-container-high bg-surface flex justify-end gap-2">
               <button
-                onClick={() => setShowExplorerModal(false)}
+                onClick={() => {
+                  setShowDnaModal(false);
+                  navigate(`/admin/blockchain/${selectedRecord.creditId}`);
+                }}
                 className="px-4 py-2 bg-primary text-on-primary rounded-lg font-title-md text-sm hover:bg-primary-container transition-colors cursor-pointer"
               >
-                Close Explorer
+                Open Full Detail Page
               </button>
             </div>
           </div>

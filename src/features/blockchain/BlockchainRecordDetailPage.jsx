@@ -1,14 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getBlockchainRecord } from './blockchainService';
-import { truncateHash, formatNumber } from '../../utils/formatters';
+import { formatNumber } from '../../utils/formatters';
 
 export default function BlockchainRecordDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [copiedHash, setCopiedHash] = useState(false);
   const [copiedContract, setCopiedContract] = useState(false);
-  const [copiedMerkle, setCopiedMerkle] = useState(false);
+  const [copiedMrvHash, setCopiedMrvHash] = useState(false);
+  const [copiedEvidenceHash, setCopiedEvidenceHash] = useState(null);
 
   const record = useMemo(() => getBlockchainRecord(id), [id]);
 
@@ -16,8 +17,13 @@ export default function BlockchainRecordDetailPage() {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
     }
-    setter(true);
-    setTimeout(() => setter(false), 2000);
+    if (typeof setter === 'function') {
+      setter(true);
+      setTimeout(() => setter(false), 2000);
+    } else {
+      setCopiedEvidenceHash(text);
+      setTimeout(() => setCopiedEvidenceHash(null), 2000);
+    }
   };
 
   if (!record) {
@@ -54,34 +60,41 @@ export default function BlockchainRecordDetailPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="font-headline-lg text-primary tracking-tight">On-Chain Transaction Details</h1>
+            <h1 className="font-headline-lg text-primary tracking-tight">Credit DNA & On-Chain Provenance</h1>
             <span className="px-3 py-0.5 rounded-full bg-secondary-container/30 text-on-secondary-container font-label-md flex items-center gap-1 border border-secondary-container">
               <span className="material-symbols-outlined text-[16px]">verified</span>
-              <span>{record.status}</span>
+              <span>{record.status} on Polygon Amoy</span>
             </span>
           </div>
           <p className="font-body-md text-on-surface-variant max-w-3xl">
-            Cryptographically verified immutable proof of blue carbon sequestration on public ledger.
+            Cryptographically verified immutable proof of blue carbon sequestration on Polygon Amoy testnet.
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-1">
             <span className="font-mono-data text-on-surface-variant px-2.5 py-1 bg-surface-container rounded text-xs">
-              Tx: {truncateHash(record.txHash, 10, 8)}
+              Provenance ID: {record.provenanceId || record.creditId}
             </span>
             <span className="font-mono-data text-on-surface-variant px-2.5 py-1 bg-surface-container rounded text-xs">
-              Token ID: #{record.tokenId}
+              MRV Package: {record.mrvCode}
+            </span>
+            <span className="font-mono-data text-on-surface-variant px-2.5 py-1 bg-surface-container rounded text-xs">
+              Token #{record.tokenId}
             </span>
           </div>
         </div>
 
         {/* Top Actions */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={() => navigate(`/admin/carbon-credits/${record.creditId}`)}
-            className="px-4 py-2 rounded-lg border border-primary-container text-primary-container font-title-md hover:bg-surface-container transition-colors flex items-center gap-2 shadow-sm text-sm cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
-            <span>View Certificate</span>
-          </button>
+          {record.explorerUrl && (
+            <a
+              href={record.explorerUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 rounded-lg border border-primary-container text-primary font-title-md hover:bg-surface-container transition-colors flex items-center gap-2 shadow-sm text-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+              <span>View on Amoy Explorer</span>
+            </a>
+          )}
           <button
             onClick={() => handleCopy(record.txHash, setCopiedHash)}
             className="px-4 py-2 rounded-lg bg-primary text-on-primary font-title-md hover:bg-primary-container transition-colors flex items-center gap-2 shadow-md text-sm cursor-pointer"
@@ -89,8 +102,31 @@ export default function BlockchainRecordDetailPage() {
             <span className="material-symbols-outlined text-[18px]">
               {copiedHash ? 'check' : 'content_copy'}
             </span>
-            <span>{copiedHash ? 'Hash Copied' : 'Copy Hash'}</span>
+            <span>{copiedHash ? 'Hash Copied' : 'Copy Tx Hash'}</span>
           </button>
+        </div>
+      </div>
+
+      {/* Credit DNA Provenance Lineage Bar */}
+      <div className="bg-surface-container-lowest p-5 rounded-xl shadow-sm border border-surface-container-high flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-title-lg text-primary flex items-center gap-2">
+            <span className="material-symbols-outlined text-secondary">account_tree</span>
+            <span>End-to-End Cryptographic Provenance Trace</span>
+          </h2>
+          <span className="text-xs font-mono-data text-outline">Credit → Project → MRV → Verification → Evidence → Hash → Polygon</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mt-1">
+          {record.dnaTrace.map((node, i) => (
+            <div key={node.type} className="p-3 bg-surface-container rounded-lg border border-outline-variant/30 flex flex-col gap-1 relative">
+              <div className="flex items-center justify-between">
+                <span className="text-secondary font-bold text-[10px] uppercase">{i + 1}. {node.type}</span>
+                <span className="material-symbols-outlined text-secondary text-[14px]">check_circle</span>
+              </div>
+              <span className="font-mono-data text-on-surface font-semibold text-xs truncate" title={node.code}>{node.code}</span>
+              <span className="text-on-surface-variant text-[11px] truncate" title={node.label}>{node.label}</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -136,7 +172,7 @@ export default function BlockchainRecordDetailPage() {
             <span className="font-title-md text-on-surface truncate">{record.methodology}</span>
           </div>
           <div className="flex items-center gap-1 text-on-surface-variant text-xs">
-            <span className="material-symbols-outlined text-[16px] text-outline">gavel</span> ID: {record.verificationId}
+            <span className="material-symbols-outlined text-[16px] text-outline">gavel</span> Ref: {record.verificationId}
           </div>
         </div>
       </div>
@@ -149,7 +185,7 @@ export default function BlockchainRecordDetailPage() {
           <div className="bg-inverse-surface p-6 rounded-xl shadow-lg relative overflow-hidden text-inverse-on-surface flex flex-col gap-5">
             <h2 className="font-headline-md text-inverse-on-surface text-lg flex items-center gap-2 border-b border-outline-variant/20 pb-3">
               <span className="material-symbols-outlined text-primary-fixed-dim">lan</span>
-              <span>Cryptographic Proof & Contract Details</span>
+              <span>Cryptographic MRV Proof & Contract Anchor</span>
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-4 font-mono-data text-xs">
@@ -167,7 +203,7 @@ export default function BlockchainRecordDetailPage() {
               </div>
 
               <div className="flex flex-col gap-1 sm:col-span-2">
-                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">Smart Contract Address</span>
+                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">Smart Contract Address (BlueCarbonMRVAnchor)</span>
                 <div className="flex items-center gap-2 bg-surface/10 px-3 py-2 rounded-lg w-full justify-between">
                   <span className="text-inverse-on-surface truncate break-all">{record.contractAddress}</span>
                   <button
@@ -184,7 +220,7 @@ export default function BlockchainRecordDetailPage() {
               </div>
 
               <div className="flex flex-col gap-1 sm:col-span-2">
-                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">Transaction Hash</span>
+                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">Transaction Hash (Polygon Amoy)</span>
                 <div className="flex items-center gap-2 bg-surface/10 px-3 py-2 rounded-lg w-full justify-between">
                   <span className="text-inverse-on-surface truncate break-all">{record.txHash}</span>
                   <button
@@ -201,17 +237,17 @@ export default function BlockchainRecordDetailPage() {
               </div>
 
               <div className="flex flex-col gap-1 sm:col-span-2">
-                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">Merkle Root Hash</span>
+                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">Canonical MRV SHA-256 Digest</span>
                 <div className="flex items-center gap-2 bg-surface/10 px-3 py-2 rounded-lg w-full justify-between">
-                  <span className="text-inverse-on-surface truncate break-all">{record.merkleRoot}</span>
+                  <span className="text-inverse-on-surface truncate break-all">{record.mrvHash}</span>
                   <button
                     type="button"
-                    onClick={() => handleCopy(record.merkleRoot, setCopiedMerkle)}
+                    onClick={() => handleCopy(record.mrvHash, setCopiedMrvHash)}
                     className="text-primary-fixed-dim hover:text-inverse-on-surface transition-colors shrink-0 cursor-pointer"
-                    title="Copy Merkle Root"
+                    title="Copy MRV Hash"
                   >
                     <span className="material-symbols-outlined text-[16px]">
-                      {copiedMerkle ? 'check' : 'content_copy'}
+                      {copiedMrvHash ? 'check' : 'content_copy'}
                     </span>
                   </button>
                 </div>
@@ -223,9 +259,45 @@ export default function BlockchainRecordDetailPage() {
               </div>
 
               <div className="flex flex-col gap-1">
-                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">Timestamp (UTC)</span>
+                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">Anchored Timestamp (UTC)</span>
                 <span className="text-inverse-on-surface text-sm">{record.timestamp}</span>
               </div>
+            </div>
+          </div>
+
+          {/* Evidence Files SHA-256 Hashes Card */}
+          <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-surface-container-high flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-headline-md text-primary text-lg flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary">fingerprint</span>
+                <span>Verified Evidence Files & SHA-256 Hashes ({record.evidenceHashes.length})</span>
+              </h2>
+              <span className="text-xs text-on-surface-variant">Cryptographic Hashes Anchored in MRV Digest</span>
+            </div>
+
+            <div className="flex flex-col gap-2.5 font-mono-data text-xs">
+              {record.evidenceHashes.map((ev) => (
+                <div key={ev.name} className="p-3 bg-surface-container rounded-lg flex flex-col gap-1 border border-outline-variant/20">
+                  <div className="flex items-center justify-between">
+                    <span className="text-primary font-semibold flex items-center gap-1.5 font-body-md text-xs">
+                      <span className="material-symbols-outlined text-[16px]">description</span>
+                      <span>{ev.name}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(ev.hash)}
+                      className="text-outline hover:text-primary transition-colors flex items-center gap-1 text-[11px] cursor-pointer"
+                      title="Copy SHA-256"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">
+                        {copiedEvidenceHash === ev.hash ? 'check' : 'content_copy'}
+                      </span>
+                      <span>{copiedEvidenceHash === ev.hash ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                  <span className="text-on-surface-variant break-all text-[11px] bg-surface/50 p-1.5 rounded">{ev.hash}</span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -287,14 +359,26 @@ export default function BlockchainRecordDetailPage() {
                   <span className="font-body-md text-on-surface font-medium truncate">{record.auditor}</span>
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-surface-container rounded-lg flex flex-col gap-1">
+                  <span className="text-label-md text-on-surface-variant uppercase text-[10px]">MRV Package</span>
+                  <span className="font-body-md text-on-surface font-medium truncate">{record.mrvCode}</span>
+                </div>
+                <div className="p-3 bg-surface-container rounded-lg flex flex-col gap-1">
+                  <span className="text-label-md text-on-surface-variant uppercase text-[10px]">Carbon Volume</span>
+                  <span className="font-body-md text-secondary font-bold truncate">{formatNumber(record.tCO2e)} tCO2e</span>
+                </div>
+              </div>
             </div>
 
             <div className="pt-2 border-t border-surface-container-high flex flex-col gap-2">
               <Link
-                to={`/admin/carbon-credits/${record.creditId}`}
-                className="w-full py-2.5 px-4 bg-primary text-on-primary rounded-lg font-title-md text-sm text-center hover:bg-primary-container transition-colors shadow-sm"
+                to={`/mrv/blockchain/${record.mrvId}`}
+                className="w-full py-2.5 px-4 bg-primary text-on-primary rounded-lg font-title-md text-sm text-center hover:bg-primary-container transition-colors shadow-sm flex items-center justify-center gap-2"
               >
-                View Official Carbon Certificate
+                <span className="material-symbols-outlined text-[18px]">fingerprint</span>
+                <span>Verify MRV On-Chain</span>
               </Link>
               <Link
                 to="/admin/blockchain"

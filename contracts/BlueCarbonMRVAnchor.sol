@@ -81,6 +81,23 @@ contract BlueCarbonMRVAnchor {
         return (a.timestamp, a.blockNumber, a.carbonAmountCentiTonne, a.recordId, a.exists);
     }
 
+    /// @notice Verifies whether an MRV hash is anchored and returns its record details
+    /// @param dataHash SHA-256 hash of the canonical MRV record
+    function verifyMRV(bytes32 dataHash)
+        external
+        view
+        returns (
+            bool exists,
+            string memory recordId,
+            uint256 carbonAmountCentiTonne,
+            uint64 timestamp,
+            uint64 blockNumber
+        )
+    {
+        Anchor memory a = anchors[dataHash];
+        return (a.exists, a.recordId, a.carbonAmountCentiTonne, a.timestamp, a.blockNumber);
+    }
+
     function isAnchored(bytes32 dataHash) external view returns (bool) {
         return anchors[dataHash].exists;
     }
