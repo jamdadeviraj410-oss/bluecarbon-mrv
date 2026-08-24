@@ -2,18 +2,25 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROLES, ROUTES } from '../../utils/constants';
 
-function SidebarItem({ icon, label, to, active }) {
+function SidebarItem({ icon, label, to, active, badge }) {
   return (
     <Link
       to={to}
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-title-md text-title-md ${
+      className={`flex items-center justify-between px-4 py-2.5 rounded-xl transition-all font-title-md text-sm ${
         active
-          ? 'bg-primary-container text-on-primary font-bold'
+          ? 'bg-primary-container text-on-primary font-bold shadow-sm'
           : 'text-on-primary/70 hover:bg-primary-container/50 hover:text-on-primary'
       }`}
     >
-      <span className="material-symbols-outlined text-[24px]">{icon}</span>
-      <span>{label}</span>
+      <div className="flex items-center gap-3">
+        <span className="material-symbols-outlined text-[22px]">{icon}</span>
+        <span>{label}</span>
+      </div>
+      {badge && (
+        <span className="px-2 py-0.5 rounded-full text-[11px] font-mono-data font-bold bg-secondary text-on-secondary">
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }
@@ -24,44 +31,75 @@ export default function Sidebar() {
   const currentPath = location.pathname;
 
   const isAdmin = user?.role === ROLES.NCCR_ADMIN;
-  const isOrg = user?.role === ROLES.NGO || user?.role === ROLES.PANCHAYAT;
+  const isVerifier = user?.role === ROLES.VERIFIER || user?.role === 'AUDITOR';
+  const isOrg = user?.role === ROLES.NGO || user?.role === ROLES.PANCHAYAT || user?.role === ROLES.PROJECT_MANAGER || user?.role === 'ORG_ADMIN';
+  const isCommunity = user?.role === ROLES.COMMUNITY || user?.role === 'COMMUNITY_USER';
 
   const adminLinks = [
-    { icon: 'dashboard', label: 'Dashboard', to: ROUTES.ADMIN_DASHBOARD },
+    { icon: 'dashboard', label: 'National Dashboard', to: ROUTES.ADMIN_DASHBOARD },
+    { icon: 'gavel', label: 'National Governance', to: ROUTES.ADMIN_GOVERNANCE },
+    { icon: 'map', label: 'National Map Explorer', to: ROUTES.ADMIN_NATIONAL_MAP },
+    { icon: 'fact_check', label: 'Governance Queues', to: ROUTES.ADMIN_GOVERNANCE_QUEUES },
     { icon: 'forest', label: 'Projects', to: ROUTES.ADMIN_PROJECTS },
     { icon: 'verified', label: 'MRV Verification', to: ROUTES.ADMIN_MRV_WORKSPACE.replace(':projectId', 'PRJ-2023-089'), basePath: '/mrv/workspace' },
     { icon: 'upload_file', label: 'Evidence Upload', to: ROUTES.ADMIN_MRV_UPLOAD },
     { icon: 'corporate_fare', label: 'Organizations', to: ROUTES.ADMIN_ORGANIZATIONS },
     { icon: 'workspace_premium', label: 'Carbon Credits', to: ROUTES.ADMIN_CARBON_CREDITS },
     { icon: 'link', label: 'Blockchain Registry', to: ROUTES.ADMIN_BLOCKCHAIN },
-    { icon: 'satellite_alt', label: 'Drone & Sensor Data', to: ROUTES.ADMIN_MRV_PROJECT_VERIFICATION.replace(':verificationId', 'M-78392-BD'), basePath: '/mrv/project-verification' },
     { icon: 'assessment', label: 'Reports', to: ROUTES.ADMIN_REPORTS },
     { icon: 'history', label: 'Audit Trail', to: ROUTES.ADMIN_AUDIT },
     { icon: 'settings', label: 'Settings', to: ROUTES.ADMIN_SETTINGS },
   ];
 
+  const verifierLinks = [
+    { icon: 'verified', label: 'MRV Verification Workspace', to: ROUTES.ADMIN_MRV_WORKSPACE.replace(':projectId', 'PRJ-2023-089'), basePath: '/mrv/workspace' },
+    { icon: 'forest', label: 'Projects Registry', to: ROUTES.ADMIN_PROJECTS },
+    { icon: 'satellite_alt', label: 'Drone & Sensor Telemetry', to: ROUTES.ADMIN_MRV_PROJECT_VERIFICATION.replace(':verificationId', 'M-78392-BD'), basePath: '/mrv/project-verification' },
+    { icon: 'link', label: 'Blockchain Verifications', to: ROUTES.ADMIN_BLOCKCHAIN },
+    { icon: 'assessment', label: 'Verification Reports', to: ROUTES.ADMIN_REPORTS },
+    { icon: 'history', label: 'Audit Log', to: ROUTES.ADMIN_AUDIT },
+  ];
+
   const orgLinks = [
-    { icon: 'dashboard', label: 'Dashboard', to: ROUTES.ORG_DASHBOARD },
+    { icon: 'dashboard', label: 'Organization Dashboard', to: ROUTES.ORG_DASHBOARD },
     { icon: 'forest', label: 'My Projects', to: ROUTES.ORG_PROJECTS },
-    { icon: 'upload_file', label: 'Upload Evidence', to: ROUTES.ORG_UPLOAD_EVIDENCE },
+    { icon: 'add_circle', label: 'Register New Project', to: ROUTES.ORG_CREATE_PROJECT },
+    { icon: 'upload_file', label: 'Upload Field Evidence', to: ROUTES.ORG_UPLOAD_EVIDENCE },
+    { icon: 'public', label: 'Public Registry', to: ROUTES.PUBLIC_REGISTRY },
     { icon: 'settings', label: 'Settings', to: ROUTES.ORG_SETTINGS },
   ];
 
-  const links = isAdmin ? adminLinks : isOrg ? orgLinks : [];
+  const communityLinks = [
+    { icon: 'dashboard', label: 'Community Dashboard', to: ROUTES.COMMUNITY_DASHBOARD },
+    { icon: 'diversity_3', label: 'Community Portal & Logs', to: ROUTES.COMMUNITY_PORTAL },
+    { icon: 'public', label: 'Public Registry', to: ROUTES.PUBLIC_REGISTRY },
+  ];
+
+  const links = isAdmin
+    ? adminLinks
+    : isVerifier
+    ? verifierLinks
+    : isOrg
+    ? orgLinks
+    : isCommunity
+    ? communityLinks
+    : adminLinks;
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[var(--sidebar-width)] bg-primary text-on-primary flex flex-col z-40 border-r border-outline/20">
       <div className="h-[var(--topbar-height)] flex items-center px-6 gap-3 border-b border-outline/20 bg-primary/95 backdrop-blur-md">
-        <div className="w-8 h-8 rounded bg-surface/10 flex items-center justify-center p-1">
-          {/* Using material icon as placeholder for logo */}
+        <div className="w-8 h-8 rounded-lg bg-surface/15 flex items-center justify-center p-1">
           <span className="material-symbols-outlined text-tertiary-fixed text-[20px]">water_ec</span>
         </div>
-        <span className="font-headline-md text-title-lg tracking-tight">Marine Ledger</span>
+        <div>
+          <span className="font-headline-md text-title-lg tracking-tight block leading-tight">Marine Ledger</span>
+          <span className="text-[10px] font-mono-data text-primary-fixed-dim uppercase tracking-wider block">NCCR BlueCarbon MRV</span>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2">
-        <div className="px-4 mb-2 text-label-md font-label-md uppercase tracking-wider text-primary-fixed-dim">
-          MAIN MENU
+      <div className="flex-1 overflow-y-auto py-5 px-3 flex flex-col gap-1 scrollbar-thin">
+        <div className="px-3 mb-1 text-[11px] font-label-md uppercase tracking-wider text-primary-fixed-dim">
+          {isAdmin ? 'NATIONAL GOVERNANCE' : isVerifier ? 'VERIFICATION PORTAL' : isOrg ? 'ORGANIZATION WORKSPACE' : 'COMMUNITY PORTAL'}
         </div>
         {links.map((link) => (
           <SidebarItem
@@ -69,26 +107,31 @@ export default function Sidebar() {
             icon={link.icon}
             label={link.label}
             to={link.to}
-            active={currentPath === link.to || currentPath.startsWith(link.to + '/') || (link.basePath && currentPath.startsWith(link.basePath))}
+            badge={link.badge}
+            active={
+              currentPath === link.to ||
+              (link.to !== '/' && currentPath.startsWith(link.to + '/')) ||
+              (link.basePath && currentPath.startsWith(link.basePath))
+            }
           />
         ))}
       </div>
 
-      <div className="p-4 border-t border-outline/20 mt-auto">
-        <div className="flex items-center gap-3 px-4 py-3 mb-2">
-          <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-outline/30">
-            <span className="material-symbols-outlined text-on-primary-container">person</span>
+      <div className="p-4 border-t border-outline/20 mt-auto bg-primary/95">
+        <div className="flex items-center gap-3 px-3 py-2.5 mb-2 rounded-xl bg-primary-container/30 border border-outline/20">
+          <div className="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-outline/30 text-on-primary-container shrink-0">
+            <span className="material-symbols-outlined text-[20px]">person</span>
           </div>
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="font-title-md text-title-md truncate">{user?.name || 'User'}</span>
-            <span className="font-body-md text-label-md text-on-primary/70 truncate">{user?.organization}</span>
+            <span className="font-title-md text-xs font-bold truncate text-on-primary">{user?.name || 'User'}</span>
+            <span className="font-body-md text-[11px] text-on-primary/70 truncate">{user?.organization || 'Registrar'}</span>
           </div>
         </div>
         <button
           onClick={logout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-error hover:bg-error/10 transition-colors font-title-md text-body-md"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-error hover:bg-error/10 transition-colors font-title-md text-xs font-bold"
         >
-          <span className="material-symbols-outlined text-[20px]">logout</span>
+          <span className="material-symbols-outlined text-[18px]">logout</span>
           <span>Sign Out</span>
         </button>
       </div>

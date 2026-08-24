@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getOrganizations } from '../../../services/organizationService';
 import { mockOrganizations } from '../data/mockOrganizations';
 import OrganizationDetailDialog from '../components/OrganizationDetailDialog';
+import { ROUTES } from '../../../utils/constants';
 
 const StatusBadge = ({ status }) => {
   let colors = "bg-gray-100 text-gray-700";
@@ -79,10 +81,10 @@ const OrganizationsPage = () => {
             <span className="material-symbols-outlined text-[20px]">filter_list</span>
             Filter
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-title-sm hover:bg-primary-container transition-colors shadow-sm">
+          <Link to={ROUTES.ONBOARDING} className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-title-sm hover:bg-primary-container transition-colors shadow-sm">
             <span className="material-symbols-outlined text-[20px]">add</span>
             Register Org
-          </button>
+          </Link>
         </div>
       </div>
 

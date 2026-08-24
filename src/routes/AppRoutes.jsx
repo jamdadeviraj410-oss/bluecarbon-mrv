@@ -8,6 +8,13 @@ import ForgotPassword from '../pages/auth/ForgotPassword';
 import AccessRestricted from '../pages/auth/AccessRestricted';
 import StatusTransitionPage from '../pages/auth/StatusTransitionPage';
 import AdminDashboard from '../pages/admin/AdminDashboard';
+import NationalGovernancePage from '../features/governance/pages/NationalGovernancePage';
+import NationalMapExplorerPage from '../features/governance/pages/NationalMapExplorerPage';
+import GovernanceQueuesPage from '../features/governance/pages/GovernanceQueuesPage';
+import OrganizationOnboardingPage from '../features/onboarding/pages/OrganizationOnboardingPage';
+import OnboardingStatusPage from '../features/onboarding/pages/OnboardingStatusPage';
+import OrganizationDashboardPage from '../features/organizations/pages/OrganizationDashboardPage';
+import OrganizationProjectsPage from '../features/organizations/pages/OrganizationProjectsPage';
 import OrganizationsPage from '../features/organizations/pages/OrganizationsPage';
 import ProjectsPage from '../features/projects/pages/ProjectsPage';
 import ProjectDetailPage from '../features/projects/pages/ProjectDetailPage';
@@ -20,9 +27,8 @@ import { BlockchainRecordsPage, BlockchainRecordDetailPage } from '../features/b
 import { CarbonCreditsPage, CarbonCreditDetailPage } from '../features/carbonCredits';
 import { ReportsPage, ReportDetailPage } from '../features/reports';
 import { AuditTrailPage, AuditTrailDetailPage } from '../features/auditTrail';
-import { PublicRegistryPage, PublicRegistryDetailPage } from '../features/publicRegistry';
+import { PublicRegistryPage, PublicRegistryDetailPage, CreditDnaProvenancePage } from '../features/publicRegistry';
 import { CommunityDashboardPage, CommunityPortalPage } from '../features/community';
-import Placeholder from '../pages/Placeholder';
 import { SettingsPage } from '../features/settings';
 
 export default function AppRoutes() {
@@ -31,10 +37,19 @@ export default function AppRoutes() {
       <Route path={ROUTES.LOGIN} element={<Login />} />
       <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
       <Route path={ROUTES.ACCESS_RESTRICTED} element={<AccessRestricted />} />
+      <Route path={ROUTES.ONBOARDING} element={<OrganizationOnboardingPage />} />
+      <Route path={ROUTES.ONBOARDING_STATUS} element={<OnboardingStatusPage />} />
       <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
 
+      {/* NCCR National Governance & Admin Routes */}
       <Route element={<AdminLayout />}>
         <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
+        <Route path={ROUTES.ADMIN_GOVERNANCE} element={<NationalGovernancePage />} />
+        <Route path="/governance" element={<NationalGovernancePage />} />
+        <Route path={ROUTES.ADMIN_NATIONAL_MAP} element={<NationalMapExplorerPage />} />
+        <Route path="/national-map" element={<NationalMapExplorerPage />} />
+        <Route path={ROUTES.ADMIN_GOVERNANCE_QUEUES} element={<GovernanceQueuesPage />} />
+        <Route path="/governance/queues" element={<GovernanceQueuesPage />} />
         <Route path={ROUTES.ADMIN_PROJECTS} element={<ProjectsPage />} />
         <Route path={ROUTES.ADMIN_PROJECT_NEW} element={<ProjectFormPage />} />
         <Route path={ROUTES.ADMIN_PROJECT_DETAIL} element={<ProjectDetailPage />} />
@@ -60,24 +75,28 @@ export default function AppRoutes() {
         <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
       </Route>
 
+      {/* Organization Portal Routes (NGO / Panchayat / Project Manager) */}
       <Route element={<OrganizationLayout />}>
-        <Route path={ROUTES.ORG_DASHBOARD} element={<Placeholder title="Organization Dashboard" />} />
-        <Route path={ROUTES.ORG_PROJECTS} element={<Placeholder title="My Projects" />} />
-        <Route path={ROUTES.ORG_CREATE_PROJECT} element={<Placeholder title="Create Project" />} />
-        <Route path={ROUTES.ORG_PROJECT_DETAIL} element={<Placeholder title="Project Details" />} />
-        <Route path={ROUTES.ORG_UPLOAD_EVIDENCE} element={<Placeholder title="Upload Evidence" />} />
+        <Route path={ROUTES.ORG_DASHBOARD} element={<OrganizationDashboardPage />} />
+        <Route path={ROUTES.ORG_PROJECTS} element={<OrganizationProjectsPage />} />
+        <Route path={ROUTES.ORG_CREATE_PROJECT} element={<ProjectFormPage />} />
+        <Route path={ROUTES.ORG_PROJECT_DETAIL} element={<ProjectDetailPage />} />
+        <Route path={ROUTES.ORG_UPLOAD_EVIDENCE} element={<UploadMrvEvidencePage />} />
         <Route path={ROUTES.ORG_SETTINGS} element={<SettingsPage />} />
       </Route>
 
+      {/* Community User Portal Routes */}
       <Route element={<OrganizationLayout />}>
         <Route path={ROUTES.COMMUNITY_DASHBOARD} element={<CommunityDashboardPage />} />
         <Route path={ROUTES.COMMUNITY_PORTAL} element={<CommunityPortalPage />} />
       </Route>
 
+      {/* Public Registry & Credit DNA Transparency Routes */}
       <Route element={<PublicLayout />}>
         <Route path={ROUTES.PUBLIC_REGISTRY} element={<PublicRegistryPage />} />
         <Route path={ROUTES.PUBLIC_PROJECT_DETAIL} element={<PublicRegistryDetailPage />} />
         <Route path={ROUTES.PUBLIC_CREDIT_DETAIL} element={<CarbonCreditDetailPage />} />
+        <Route path={ROUTES.PUBLIC_PROVENANCE_DETAIL} element={<CreditDnaProvenancePage />} />
       </Route>
 
       <Route path={ROUTES.STATUS} element={<StatusTransitionPage />} />

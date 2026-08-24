@@ -143,10 +143,16 @@ export default function Login() {
               )}
             </button>
           </form>
-          <div className="mt-10 pt-8 border-t border-outline-variant/30 text-center">
+          <div className="mt-8 pt-6 border-t border-outline-variant/30 text-center space-y-2">
             <p className="font-body-md text-on-surface-variant">
-              Need access? <Link className="font-title-md text-primary-container hover:text-primary transition-colors underline-offset-4 hover:underline" to="#">Contact your organization administrator.</Link>
+              New NGO, Panchayat, or Community? <Link className="font-title-md text-primary hover:underline font-bold" to={ROUTES.ONBOARDING}>Apply for Onboarding</Link>
             </p>
+            <div>
+              <Link className="font-label-md text-secondary hover:underline inline-flex items-center gap-1 font-bold" to={ROUTES.PUBLIC_REGISTRY}>
+                <span className="material-symbols-outlined text-[16px]">public</span>
+                View Public Carbon Registry
+              </Link>
+            </div>
           </div>
           {/* System Status */}
           <div className="mt-12 flex items-center justify-center gap-2 px-4 py-2 bg-secondary-container/20 rounded-full w-max mx-auto border border-secondary-container/30">
