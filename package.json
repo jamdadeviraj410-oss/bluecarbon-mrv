@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "node src/tests/run_tests.js",
+    "test": "node --env-file-if-exists=.env src/tests/run_tests.js",
     "preview": "vite preview"
   },
   "dependencies": {

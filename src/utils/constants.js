@@ -51,6 +51,7 @@ export const ONBOARDING_STATUS = {
 
 export const ROUTES = {
   LOGIN: '/login',
+  SIGNUP: '/signup',
   FORGOT_PASSWORD: '/forgot-password',
   ACCESS_RESTRICTED: '/access-restricted',
 

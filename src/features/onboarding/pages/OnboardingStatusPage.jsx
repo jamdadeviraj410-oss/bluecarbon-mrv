@@ -21,22 +21,13 @@ export default function OnboardingStatusPage() {
       if (data) {
         setResult(data);
       } else {
-        // Fallback simulated result if offline
-        setResult({
-          application_number: term,
-          organization_name: 'Sundarbans Mangrove Protection Collective',
-          organization_type: 'NGO',
-          state: 'West Bengal',
-          district: 'South 24 Parganas',
-          primary_contact_email: 'contact@sundarbanscollective.org',
-          status: 'UNDER_REVIEW',
-          review_notes: 'Document verification in progress by NCCR National Authority.',
-          created_at: new Date().toISOString(),
-        });
+        setResult(null);
+        setErrorMsg(`No onboarding application found with reference number "${term}". Please check the code and try again.`);
       }
     } catch (err) {
       console.error('Status fetch error:', err);
-      setErrorMsg('Could not find an application with this tracking code. Please verify the code.');
+      setResult(null);
+      setErrorMsg(err.message || 'Could not find an application with this tracking code. Please verify the code.');
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,34 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase.js';
+
+/**
+ * Maps Supabase and network errors to clean, user-friendly messages.
+ */
+export function formatAuthErrorMessage(error) {
+  if (!error) return 'An unexpected error occurred. Please try again.';
+
+  const message = error.message || String(error);
+
+  if (message.includes('Invalid login credentials') || message.includes('invalid_grant')) {
+    return 'Invalid email or password.';
+  }
+  if (message.includes('Email not confirmed') || message.includes('email_not_confirmed')) {
+    return 'Please verify your email before signing in.';
+  }
+  if (message.includes('User already registered') || message.includes('already_registered')) {
+    return 'An account with this email already exists.';
+  }
+  if (message.includes('Password should be at least') || message.includes('weak_password')) {
+    return 'Password must be at least 6 characters.';
+  }
+  if (message.includes('Failed to fetch') || message.includes('NetworkError') || message.includes('network')) {
+    return 'Unable to connect to the registry. Please check your connection and try again.';
+  }
+  if (message.includes('rate limit') || message.includes('over_email_send_rate_limit')) {
+    return 'Too many attempts. Please wait a few minutes before trying again.';
+  }
+
+  return message;
+}
 
 /**
  * Real Supabase Authentication & Profile Service
@@ -6,12 +36,12 @@ import { supabase } from '../lib/supabase';
 
 export async function loginUser(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+    email: email.trim(),
     password,
   });
 
   if (error) {
-    throw error;
+    throw new Error(formatAuthErrorMessage(error));
   }
 
   // Fetch corresponding profile
@@ -26,20 +56,20 @@ export async function loginUser(email, password) {
 
 export async function signUpUser({ email, password, fullName, role = 'COMMUNITY', organizationId = null, phone = null }) {
   const { data, error } = await supabase.auth.signUp({
-    email,
+    email: email.trim(),
     password,
     options: {
       data: {
-        full_name: fullName,
+        full_name: fullName.trim(),
         role,
         organization_id: organizationId,
-        phone,
+        phone: phone ? phone.trim() : null,
       },
     },
   });
 
   if (error) {
-    throw error;
+    throw new Error(formatAuthErrorMessage(error));
   }
 
   let profile = null;
@@ -57,19 +87,19 @@ export async function signUpUser({ email, password, fullName, role = 'COMMUNITY'
 export async function logoutUser() {
   const { error } = await supabase.auth.signOut();
   if (error) {
-    throw error;
+    throw new Error(formatAuthErrorMessage(error));
   }
   return { success: true };
 }
 
 export async function resetPassword(email) {
   const redirectTo = `${window.location.origin}/status`;
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
     redirectTo,
   });
 
   if (error) {
-    throw error;
+    throw new Error(formatAuthErrorMessage(error));
   }
 
   return { success: true, data, message: `Reset instructions sent to ${email}` };
@@ -91,21 +121,26 @@ export async function getCurrentUser() {
 export async function getUserProfile(userId) {
   if (!userId) return null;
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select(`
-      *,
-      organization:organizations(id, org_code, name, type, status, location, state)
-    `)
-    .eq('id', userId)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(`
+        *,
+        organization:organizations(id, org_code, name, type, status, location, state)
+      `)
+      .eq('id', userId)
+      .maybeSingle();
 
-  if (error) {
-    console.error('Error fetching user profile:', error);
+    if (error) {
+      console.warn('Unable to load user profile from database:', error.message);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.warn('Profile fetch exception:', err);
     return null;
   }
-
-  return data;
 }
 
 export async function updateUserProfile(userId, updates) {
@@ -117,7 +152,7 @@ export async function updateUserProfile(userId, updates) {
     .single();
 
   if (error) {
-    throw error;
+    throw new Error(formatAuthErrorMessage(error));
   }
 
   return data;
@@ -131,4 +166,24 @@ export function subscribeToAuthChanges(callback) {
     }
     callback(event, session, profile);
   });
+}
+
+/**
+ * Checks real connection to Supabase database.
+ */
+export async function checkRegistryHealth() {
+  const start = Date.now();
+  try {
+    const { error } = await supabase
+      .from('organizations')
+      .select('id')
+      .limit(1);
+
+    if (error && error.code !== 'PGRST116') {
+      return { online: false, latencyMs: Date.now() - start, error: error.message };
+    }
+    return { online: true, latencyMs: Date.now() - start, error: null };
+  } catch (err) {
+    return { online: false, latencyMs: Date.now() - start, error: err.message };
+  }
 }

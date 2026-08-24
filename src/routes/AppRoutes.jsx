@@ -1,9 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ROUTES } from '../utils/constants';
+import { ROLES, ROUTES } from '../utils/constants';
+import RoleRoute from '../components/auth/RoleRoute';
 import AdminLayout from '../components/layout/AdminLayout';
 import OrganizationLayout from '../components/layout/OrganizationLayout';
 import PublicLayout from '../components/layout/PublicLayout';
 import Login from '../pages/auth/Login';
+import Signup from '../pages/auth/Signup';
 import ForgotPassword from '../pages/auth/ForgotPassword';
 import AccessRestricted from '../pages/auth/AccessRestricted';
 import StatusTransitionPage from '../pages/auth/StatusTransitionPage';
@@ -38,15 +40,17 @@ import { SettingsPage } from '../features/settings';
 export default function AppRoutes() {
   return (
     <Routes>
+      {/* Public Authentication & Onboarding Routes */}
       <Route path={ROUTES.LOGIN} element={<Login />} />
+      <Route path={ROUTES.SIGNUP} element={<Signup />} />
       <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
       <Route path={ROUTES.ACCESS_RESTRICTED} element={<AccessRestricted />} />
       <Route path={ROUTES.ONBOARDING} element={<OrganizationOnboardingPage />} />
       <Route path={ROUTES.ONBOARDING_STATUS} element={<OnboardingStatusPage />} />
       <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
 
-      {/* NCCR National Governance & Admin Routes */}
-      <Route element={<AdminLayout />}>
+      {/* NCCR National Governance & Admin Routes (NCCR_ADMIN Only) */}
+      <Route element={<RoleRoute allowedRoles={[ROLES.NCCR_ADMIN]}><AdminLayout /></RoleRoute>}>
         <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
         <Route path={ROUTES.ADMIN_GOVERNANCE} element={<NationalGovernancePage />} />
         <Route path="/governance" element={<NationalGovernancePage />} />
@@ -89,8 +93,8 @@ export default function AppRoutes() {
         <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
       </Route>
 
-      {/* Organization Portal Routes (NGO / Panchayat / Project Manager) */}
-      <Route element={<OrganizationLayout />}>
+      {/* Organization Portal Routes (NGO, Panchayat, Project Manager, NCCR_ADMIN) */}
+      <Route element={<RoleRoute allowedRoles={[ROLES.NGO, ROLES.PANCHAYAT, ROLES.PROJECT_MANAGER, ROLES.NCCR_ADMIN, 'ORG_ADMIN']}><OrganizationLayout /></RoleRoute>}>
         <Route path={ROUTES.ORG_DASHBOARD} element={<OrganizationDashboardPage />} />
         <Route path={ROUTES.ORG_PROJECTS} element={<OrganizationProjectsPage />} />
         <Route path={ROUTES.ORG_CREATE_PROJECT} element={<ProjectFormPage />} />
@@ -99,8 +103,8 @@ export default function AppRoutes() {
         <Route path={ROUTES.ORG_SETTINGS} element={<SettingsPage />} />
       </Route>
 
-      {/* Community User Portal Routes */}
-      <Route element={<OrganizationLayout />}>
+      {/* Community User Portal Routes (COMMUNITY, NCCR_ADMIN) */}
+      <Route element={<RoleRoute allowedRoles={[ROLES.COMMUNITY, ROLES.NCCR_ADMIN, 'COMMUNITY_USER']}><OrganizationLayout /></RoleRoute>}>
         <Route path={ROUTES.COMMUNITY_DASHBOARD} element={<CommunityDashboardPage />} />
         <Route path={ROUTES.COMMUNITY_PORTAL} element={<CommunityPortalPage />} />
       </Route>

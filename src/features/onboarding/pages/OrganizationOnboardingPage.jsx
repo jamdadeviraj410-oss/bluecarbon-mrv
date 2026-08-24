@@ -68,16 +68,7 @@ export default function OrganizationOnboardingPage() {
       setStep(5);
     } catch (err) {
       console.error('Submission error:', err);
-      // Fallback display if DB is offline
-      const mockAppNum = `APP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-      setSubmittedData({
-        application_number: mockAppNum,
-        organization_name: formData.organizationName,
-        organization_type: formData.organizationType,
-        state: formData.state,
-        primary_contact_email: formData.primaryContactEmail,
-      });
-      setStep(5);
+      setErrorMsg(err.message || 'Failed to submit onboarding application. Please check your network connection and try again.');
     } finally {
       setIsSubmitting(false);
     }

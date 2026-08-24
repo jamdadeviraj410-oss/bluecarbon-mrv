@@ -13,18 +13,31 @@ import {
 
 const AuthContext = createContext(null);
 
+export const AUTH_STATUS = {
+  INITIALIZING: 'INITIALIZING',
+  AUTHENTICATED: 'AUTHENTICATED',
+  UNAUTHENTICATED: 'UNAUTHENTICATED',
+  PROFILE_PENDING: 'PROFILE_PENDING',
+  PROFILE_INVALID: 'PROFILE_INVALID',
+  ERROR: 'ERROR',
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authStatus, setAuthStatus] = useState(AUTH_STATUS.INITIALIZING);
 
   // Helper to format user object for app consumption
+  // STRICT: Never fall back to NCCR_ADMIN or any administrative role
   const formatAuthUser = (supabaseUser, profile) => {
     if (!supabaseUser) return null;
 
     const metadata = supabaseUser.user_metadata || {};
-    const role = profile?.role || metadata.role || ROLES.NCCR_ADMIN;
-    const orgName = profile?.organization?.name || metadata.organization || 'Registrar Office';
+    // Canonical role resolution: explicit DB profile role > metadata role > null
+    const rawRole = profile?.role || metadata.role || null;
+    const role = (rawRole && Object.values(ROLES).includes(rawRole)) ? rawRole : (rawRole ? rawRole : null);
+    const orgName = profile?.organization?.name || metadata.organization || null;
 
     return {
       id: supabaseUser.id,
@@ -36,6 +49,7 @@ export function AuthProvider({ children }) {
       phone: profile?.phone || metadata.phone || null,
       avatar: profile?.avatar_url || null,
       profile,
+      isRoleAssigned: Boolean(role),
     };
   };
 
@@ -46,11 +60,22 @@ export function AuthProvider({ children }) {
     async function initSession() {
       try {
         const current = await getCurrentUser();
-        if (isMounted && current) {
-          setUser(formatAuthUser(current, current.profile));
+        if (isMounted) {
+          if (current) {
+            const formatted = formatAuthUser(current, current.profile);
+            setUser(formatted);
+            setAuthStatus(formatted.role ? AUTH_STATUS.AUTHENTICATED : AUTH_STATUS.PROFILE_PENDING);
+          } else {
+            setUser(null);
+            setAuthStatus(AUTH_STATUS.UNAUTHENTICATED);
+          }
         }
       } catch (err) {
         console.error('Session initialization error:', err);
+        if (isMounted) {
+          setUser(null);
+          setAuthStatus(AUTH_STATUS.ERROR);
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -65,9 +90,12 @@ export function AuthProvider({ children }) {
 
       setSession(currentSession);
       if (currentSession?.user) {
-        setUser(formatAuthUser(currentSession.user, profile));
+        const formatted = formatAuthUser(currentSession.user, profile);
+        setUser(formatted);
+        setAuthStatus(formatted.role ? AUTH_STATUS.AUTHENTICATED : AUTH_STATUS.PROFILE_PENDING);
       } else {
         setUser(null);
+        setAuthStatus(AUTH_STATUS.UNAUTHENTICATED);
       }
       setIsLoading(false);
     });
@@ -85,7 +113,11 @@ export function AuthProvider({ children }) {
       const appUser = formatAuthUser(authUser, profile);
       setUser(appUser);
       setSession(authSession);
+      setAuthStatus(appUser.role ? AUTH_STATUS.AUTHENTICATED : AUTH_STATUS.PROFILE_PENDING);
       return appUser;
+    } catch (err) {
+      setAuthStatus(AUTH_STATUS.UNAUTHENTICATED);
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -95,10 +127,14 @@ export function AuthProvider({ children }) {
     setIsLoading(true);
     try {
       const { user: authUser, profile, session: authSession } = await signUpUser(data);
-      const appUser = formatAuthUser(authUser, profile);
-      setUser(appUser);
-      setSession(authSession);
-      return appUser;
+      if (authUser) {
+        const appUser = formatAuthUser(authUser, profile);
+        setUser(appUser);
+        setSession(authSession);
+        setAuthStatus(appUser.role ? AUTH_STATUS.AUTHENTICATED : AUTH_STATUS.PROFILE_PENDING);
+        return { user: appUser, session: authSession, requiresConfirmation: !authSession };
+      }
+      return { user: null, session: null, requiresConfirmation: true };
     } finally {
       setIsLoading(false);
     }
@@ -110,10 +146,12 @@ export function AuthProvider({ children }) {
       await logoutUser();
       setUser(null);
       setSession(null);
+      setAuthStatus(AUTH_STATUS.UNAUTHENTICATED);
     } catch (err) {
       console.error('Logout error:', err);
       setUser(null);
       setSession(null);
+      setAuthStatus(AUTH_STATUS.UNAUTHENTICATED);
     } finally {
       setIsLoading(false);
     }
@@ -126,38 +164,32 @@ export function AuthProvider({ children }) {
   const updateProfile = useCallback(async (updates) => {
     if (!user?.id) return;
     const updatedProfile = await updateUserProfile(user.id, updates);
-    setUser((prev) => ({
-      ...prev,
-      name: updatedProfile.full_name || prev.name,
-      phone: updatedProfile.phone || prev.phone,
-      avatar: updatedProfile.avatar_url || prev.avatar,
-      profile: updatedProfile,
-    }));
-    return updatedProfile;
-  }, [user]);
-
-  // Role switch helper (updates user role in DB & state if authorized)
-  const switchRole = useCallback((roleKey) => {
     setUser((prev) => {
       if (!prev) return null;
       return {
         ...prev,
-        role: ROLES[roleKey] || roleKey,
+        name: updatedProfile.full_name || prev.name,
+        phone: updatedProfile.phone || prev.phone,
+        avatar: updatedProfile.avatar_url || prev.avatar,
+        profile: updatedProfile,
       };
     });
-  }, []);
+    return updatedProfile;
+  }, [user]);
 
   const value = {
     user,
     session,
-    isAuthenticated: !!user,
+    role: user?.role || null,
+    isAuthenticated: Boolean(user && user.role),
+    isProfilePending: Boolean(user && !user.role),
     isLoading,
+    authStatus,
     login,
     signup,
     logout,
     resetPassword,
     updateProfile,
-    switchRole,
   };
 
   return (
