@@ -316,32 +316,39 @@ export default function BlockchainRecordsPage() {
                         </td>
                         <td className="py-3.5 px-4">
                           <div className="inline-flex items-center gap-1.5 text-on-surface-variant font-mono-data text-[12px]">
-                            <span>{truncateHash(record.txHash, 6, 4)}</span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCopy(record.txHash);
-                              }}
-                              className="text-outline hover:text-primary transition-colors cursor-pointer"
-                              title="Copy Hash"
-                            >
-                              <span className="material-symbols-outlined text-[14px]">
-                                {copiedHash === record.txHash ? 'check' : 'content_copy'}
-                              </span>
-                            </button>
+                            <span>{record.txHash ? truncateHash(record.txHash, 6, 4) : 'Pending Anchor'}</span>
+                            {record.txHash && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopy(record.txHash);
+                                }}
+                                className="text-outline hover:text-primary transition-colors cursor-pointer"
+                                title="Copy Hash"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">
+                                  {copiedHash === record.txHash ? 'check' : 'content_copy'}
+                                </span>
+                              </button>
+                            )}
                           </div>
                         </td>
                         <td className="py-3.5 px-4 text-center">
-                          {record.status === 'Confirmed' ? (
+                          {record.isDemo || record.isSimulated ? (
+                            <div className="inline-flex items-center justify-center bg-amber-500/10 text-amber-600 px-2.5 py-0.5 rounded-full gap-1 border border-amber-500/30">
+                              <span className="material-symbols-outlined text-[14px]">science</span>
+                              <span className="font-label-md text-[11px] font-semibold">DEMO / SIMULATION</span>
+                            </div>
+                          ) : record.status === 'Confirmed' && record.txHash ? (
                             <div className="inline-flex items-center justify-center bg-secondary-container/20 text-on-secondary-container px-2.5 py-0.5 rounded-full gap-1 border border-secondary-container">
                               <span className="material-symbols-outlined text-[14px]">check_circle</span>
                               <span className="font-label-md text-[11px]">Confirmed</span>
                             </div>
                           ) : (
                             <div className="inline-flex items-center justify-center bg-surface-variant text-on-surface-variant px-2.5 py-0.5 rounded-full gap-1 border border-outline-variant">
-                              <span className="material-symbols-outlined text-[14px] animate-spin">hourglass_empty</span>
-                              <span className="font-label-md text-[11px]">Pending ({record.confirmations || 12}/{record.confirmationsTotal || 15})</span>
+                              <span className="material-symbols-outlined text-[14px]">schedule</span>
+                              <span className="font-label-md text-[11px]">{record.status || 'Pending'}</span>
                             </div>
                           )}
                         </td>
@@ -384,13 +391,32 @@ export default function BlockchainRecordsPage() {
             <div className="p-5 lg:p-6 border-b border-surface-container-high bg-gradient-to-b from-primary/5 to-transparent relative z-10">
               <div className="flex justify-between items-start mb-2">
                 <div className="font-label-md text-on-surface-variant uppercase tracking-wider text-[11px]">Credit DNA Profile</div>
-                <div className="bg-secondary-container/20 text-on-secondary-container px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase border border-secondary-container inline-flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]">verified</span>
-                  <span>On-Chain Verified</span>
-                </div>
+                {selectedRecord.isDemo || selectedRecord.isSimulated ? (
+                  <div className="bg-amber-500/10 text-amber-600 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase border border-amber-500/30 inline-flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">science</span>
+                    <span>Demo Simulation</span>
+                  </div>
+                ) : selectedRecord.txHash ? (
+                  <div className="bg-secondary-container/20 text-on-secondary-container px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase border border-secondary-container inline-flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">verified</span>
+                    <span>On-Chain Verified</span>
+                  </div>
+                ) : (
+                  <div className="bg-surface-variant text-on-surface-variant px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase border border-outline-variant inline-flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">schedule</span>
+                    <span>Pending On-Chain</span>
+                  </div>
+                )}
               </div>
               <h3 className="font-headline-md text-on-surface font-mono-data tracking-tight text-lg">{selectedRecord.creditId}</h3>
               <p className="font-body-md text-primary font-semibold mt-1 line-clamp-1">{selectedRecord.projectName}</p>
+              
+              {(selectedRecord.isDemo || selectedRecord.isSimulated) && (
+                <div className="mt-3 p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-[11px] text-amber-700 dark:text-amber-300 flex items-start gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-amber-600 shrink-0">info</span>
+                  <span><strong>DEMO BLOCKCHAIN RECORD:</strong> Simulated for testing. Real immutable anchoring requires invoking the smart contract on Polygon Amoy.</span>
+                </div>
+              )}
               
               <div className="mt-4 bg-surface p-3 rounded-lg border border-surface-container-high flex items-center justify-between">
                 <span className="font-body-md text-on-surface-variant text-sm">Quantity Verified</span>

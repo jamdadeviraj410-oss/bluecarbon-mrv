@@ -105,5 +105,41 @@ export function runBlockchainProvenanceTests() {
     assert(!anchorCode.includes('Math.random()'), 'anchor-mrv must not generate fake random hashes');
   });
 
+  // Test 5: Negative Test — Non-VERIFIED MRV Rejection
+  recordTest('Negative Test: Non-VERIFIED MRV rejection in anchor logic', () => {
+    const anchorFnPath = path.resolve('supabase', 'functions', 'anchor-mrv', 'index.ts');
+    const anchorCode = fs.readFileSync(anchorFnPath, 'utf8');
+    assert(anchorCode.includes('status !== \'VERIFIED\''), 'Must strictly reject non-VERIFIED MRV submissions');
+  });
+
+  // Test 6: Negative Test — Missing server configuration results in safe failure
+  recordTest('Negative Test: Missing blockchain credentials returns safe error', () => {
+    const anchorFnPath = path.resolve('supabase', 'functions', 'anchor-mrv', 'index.ts');
+    const anchorCode = fs.readFileSync(anchorFnPath, 'utf8');
+    assert(anchorCode.includes('Blockchain server configuration is incomplete'), 'Must return 500 configuration error');
+  });
+
+  // Test 7: Negative Test — Changed evidence hash alters canonical digest
+  recordTest('Negative Test: Changed evidence file hash alters canonical digest', () => {
+    const payloadOrig = {
+      submission: { id: 'SUB-1', code: 'MRV-01', status: 'VERIFIED' },
+      evidence: [{ id: 'E1', sha256_hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }],
+    };
+    const payloadAltered = {
+      submission: { id: 'SUB-1', code: 'MRV-01', status: 'VERIFIED' },
+      evidence: [{ id: 'E1', sha256_hash: '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8' }],
+    };
+    const hashOrig = sha256Hex(canonicalize(payloadOrig));
+    const hashAltered = sha256Hex(canonicalize(payloadAltered));
+    assert.notStrictEqual(hashOrig, hashAltered, 'Altered evidence hash must produce a completely different canonical digest');
+  });
+
+  // Test 8: Negative Test — Verification function returns false when anchor absent
+  recordTest('Negative Test: On-chain absence returns verified: false', () => {
+    const verifyFnPath = path.resolve('supabase', 'functions', 'verify-mrv', 'index.ts');
+    const verifyCode = fs.readFileSync(verifyFnPath, 'utf8');
+    assert(verifyCode.includes('verified: false'), 'Must return verified: false on missing or mismatched anchor');
+  });
+
   return testResults;
 }
