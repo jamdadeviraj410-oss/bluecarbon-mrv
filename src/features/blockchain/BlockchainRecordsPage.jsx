@@ -110,11 +110,11 @@ export default function BlockchainRecordsPage() {
           <div className="flex items-center gap-2">
             <h1 className="font-headline-lg text-primary tracking-tight">Blockchain Carbon Registry</h1>
             <span className="px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container font-mono-data text-xs border border-secondary">
-              Polygon Amoy (Chain 80002)
+              {stats.activeNetworksCount > 0 ? 'Polygon Amoy (Chain 80002)' : 'Configured Blockchain Network'}
             </span>
           </div>
           <p className="font-body-md text-on-surface-variant max-w-2xl">
-            Immutable provenance and tamper-evident audit trail of verified blue carbon MRV records on Polygon Amoy.
+            Immutable provenance and tamper-evident audit trail of verified blue carbon MRV records on configured blockchain networks.
           </p>
           <div className="inline-flex items-center gap-1.5 bg-surface-container-high px-3 py-1 rounded-full mt-1 shadow-sm w-fit">
             <span className="material-symbols-outlined text-secondary text-[16px] animate-pulse">verified_user</span>
@@ -277,7 +277,9 @@ export default function BlockchainRecordsPage() {
           <div className="font-headline-lg text-on-surface z-10 tracking-tight">
             {stats.totalCO2eTokenized} <span className="font-title-md text-on-surface-variant">tCO2e</span>
           </div>
-          <div className="font-body-md text-outline z-10 text-[13px]">on Polygon Amoy Testnet</div>
+          <div className="font-body-md text-outline z-10 text-[13px]">
+            {stats.activeNetworksCount > 0 ? 'on Polygon Amoy Testnet' : 'On-chain Registry'}
+          </div>
         </div>
 
         {/* Card 3 */}

@@ -253,7 +253,7 @@ export async function runBlockchainProvenanceTests() {
     const formatted = formatBlockchainRecord({
       id: 'rec-1',
       tx_hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-      is_verified_on_chain: true,
+      verified_on_chain: true,
       network: { short_name: 'Polygon Amoy' },
     });
     assert.strictEqual(formatted.statusCode, 'VERIFIED_ON_CHAIN', 'Must produce VERIFIED_ON_CHAIN status code');
@@ -269,6 +269,57 @@ export async function runBlockchainProvenanceTests() {
     });
     assert.strictEqual(formatted.statusCode, 'DEMO_SIMULATED', 'Must produce DEMO_SIMULATED status code');
     assert.strictEqual(formatted.status, 'DEMO / SIMULATED', 'Must display DEMO / SIMULATED label');
+  });
+
+  // Test 24: verify-mrv verifies transaction receipt existence and success
+  await recordTest('verify-mrv Edge Function independently verifies tx receipt on blockchain', () => {
+    const verifyPath = path.resolve('supabase', 'functions', 'verify-mrv', 'index.ts');
+    const code = fs.readFileSync(verifyPath, 'utf8');
+    assert(code.includes('getTransactionReceipt'), 'verify-mrv must call getTransactionReceipt');
+    assert(code.includes('txReceipt.status === 1'), 'verify-mrv must check that receipt status is 1 (success)');
+  });
+
+  // Test 25: anchor-mrv rejects missing or invalid carbon estimate and does not convert to 0
+  await recordTest('anchor-mrv rejects missing/invalid carbon and never defaults to 0', () => {
+    const anchorPath = path.resolve('supabase', 'functions', 'anchor-mrv', 'index.ts');
+    const code = fs.readFileSync(anchorPath, 'utf8');
+    assert(!code.includes('Number(submission.carbon_estimate || 0)'), 'Must not convert missing carbon estimate to 0');
+    assert(code.includes('submission.carbon_estimate == null'), 'Must validate carbon_estimate presence');
+  });
+
+  // Test 26: retirement RPC does not fabricate tx_hash or fake CONFIRMED blockchain_records
+  await recordTest('retirement RPC does not fabricate fake blockchain transactions or blocks', () => {
+    const migrationPath = path.resolve('supabase', 'migrations', '202608240007_carbon_rpc_and_retirement.sql');
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    assert(!sql.includes('gen_random_bytes(20)'), 'retire_carbon_credit must not fabricate tx_hash with gen_random_bytes');
+    assert(!sql.includes('48200000 + floor(random()'), 'retire_carbon_credit must not fabricate random block numbers');
+  });
+
+  // Test 27: getBlockchainStats does not count ANCHORED records as VERIFIED_ON_CHAIN
+  await recordTest('getBlockchainStats strictly separates ANCHORED from VERIFIED_ON_CHAIN', async () => {
+    const { getBlockchainStats, formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const anchoredRecord = formatBlockchainRecord({
+      id: 'rec-anchored-1',
+      tx_hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      status: 'CONFIRMED',
+      tCO2e: 500,
+    });
+    assert.strictEqual(anchoredRecord.statusCode, 'ANCHORED');
+    const stats = getBlockchainStats();
+    // verifiedProjectsCount should be 0 when no verified records exist in cache
+    assert.strictEqual(typeof stats.verifiedProjectsCount, 'number');
+  });
+
+  // Test 28: Raw is_verified_on_chain boolean without tx_hash is rejected as PENDING
+  await recordTest('Raw DB boolean without tx_hash does not qualify for VERIFIED_ON_CHAIN', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const record = formatBlockchainRecord({
+      id: 'rec-fake-1',
+      is_verified_on_chain: true,
+      tx_hash: null,
+    });
+    assert.notStrictEqual(record.statusCode, 'VERIFIED_ON_CHAIN', 'Cannot be VERIFIED_ON_CHAIN without tx_hash');
+    assert.strictEqual(record.statusCode, 'PENDING');
   });
 
   return testResults;

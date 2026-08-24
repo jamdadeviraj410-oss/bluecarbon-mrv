@@ -74,8 +74,8 @@ BEGIN
     WHERE id = p_credit_id;
 
     v_cert_code := 'RET-CERT-' || to_char(now(), 'YYYY') || '-' || (floor(random() * 89999 + 10000))::TEXT;
-    v_tx_hash := '0x' || encode(gen_random_bytes(20), 'hex');
-    v_block_number := 48200000 + floor(random() * 50000)::BIGINT;
+    v_tx_hash := NULL;
+    v_block_number := NULL;
 
     INSERT INTO public.credit_retirements (
         certificate_code,
@@ -96,7 +96,7 @@ BEGIN
         p_beneficiary_country,
         p_retirement_reason,
         v_user_id,
-        v_tx_hash,
+        NULL,
         now()
     )
     RETURNING id INTO v_retire_id;
@@ -121,41 +121,8 @@ BEGIN
         p_beneficiary_name,
         v_credit.unit_price_usd,
         v_user_id,
-        v_tx_hash
+        NULL
     );
-
-    SELECT id INTO v_network_id FROM public.blockchain_networks WHERE name = 'Polygon Mainnet' LIMIT 1;
-
-    IF v_network_id IS NOT NULL THEN
-        INSERT INTO public.blockchain_records (
-            record_code,
-            credit_id,
-            network_id,
-            tx_hash,
-            block_number,
-            token_id,
-            record_type,
-            payload,
-            status
-        )
-        VALUES (
-            'BLK-RET-' || (floor(random() * 89999 + 10000))::TEXT,
-            p_credit_id,
-            v_network_id,
-            v_tx_hash,
-            v_block_number,
-            v_credit.credit_code,
-            'RETIRE',
-            jsonb_build_object(
-                'certificateCode', v_cert_code,
-                'amountRetired', p_amount,
-                'beneficiary', p_beneficiary_name,
-                'reason', p_retirement_reason,
-                'remainingAvailable', v_new_available
-            ),
-            'CONFIRMED'
-        );
-    END IF;
 
     RETURN jsonb_build_object(
         'success', true,
@@ -165,8 +132,8 @@ BEGIN
         'remainingAvailable', v_new_available,
         'totalRetired', v_new_retired,
         'status', v_new_status,
-        'txHash', v_tx_hash,
-        'blockNumber', v_block_number,
+        'txHash', NULL,
+        'blockNumber', NULL,
         'beneficiaryName', p_beneficiary_name,
         'retirementReason', p_retirement_reason,
         'retiredAt', now()

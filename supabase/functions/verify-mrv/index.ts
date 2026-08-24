@@ -55,14 +55,24 @@ Deno.serve(async (req) => {
     if (!anchor?.tx_hash) return response(200, { verified: false, reason: 'NO_ANCHOR', dataHash });
 
     const provider = new ethers.JsonRpcProvider(rpcUrl);
+
+    // Independently verify that the transaction receipt exists on the blockchain and succeeded
+    let txReceipt = null;
+    try {
+      txReceipt = await provider.getTransactionReceipt(anchor.tx_hash);
+    } catch {
+      txReceipt = null;
+    }
+    const isTxValid = Boolean(txReceipt && txReceipt.status === 1);
+
     const contract = new ethers.Contract(contractAddress, ABI, provider);
     const onChain = await contract.verifyMRV(`0x${dataHash}`);
     const onChainExists = Boolean(onChain[0]);
     const onChainRecordId = onChain[1];
     const onChainCarbonCentiTonne = Number(onChain[2] || 0);
     const onChainTimestamp = Number(onChain[3] || 0);
-    const onChainBlockNumber = Number(onChain[4] || anchor.block_number || 0);
-    const verified = onChainExists && onChainRecordId === submission.submission_code;
+    const onChainBlockNumber = Number(onChain[4] || txReceipt?.blockNumber || anchor.block_number || 0);
+    const verified = isTxValid && onChainExists && onChainRecordId === submission.submission_code;
 
     return response(200, {
       verified,

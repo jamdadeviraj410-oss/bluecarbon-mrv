@@ -122,10 +122,14 @@ Deno.serve(async (req) => {
       .single();
     if (insertError) throw insertError;
 
+    if (submission.carbon_estimate == null || isNaN(Number(submission.carbon_estimate)) || Number(submission.carbon_estimate) <= 0) {
+      return json(422, { error: 'Valid positive carbon_estimate is required for blockchain anchoring' });
+    }
+
     const provider = new ethers.JsonRpcProvider(rpcUrl);
     const wallet = new ethers.Wallet(privateKey, provider);
     const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, wallet);
-    const carbonAmountCentiTonne = BigInt(Math.round(Number(submission.carbon_estimate || 0) * 100));
+    const carbonAmountCentiTonne = BigInt(Math.round(Number(submission.carbon_estimate) * 100));
 
     const tx = await contract.anchorMRV(bytes32Hash, submission.submission_code, carbonAmountCentiTonne);
     const receipt = await tx.wait(1);

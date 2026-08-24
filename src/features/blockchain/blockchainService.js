@@ -75,9 +75,19 @@ export function formatBlockchainRecord(r) {
   const networkSymbol = network.symbol ?? null;
   const networkColor = network.color ?? '#6c757d';
 
+  // Independent verify-mrv result confirms all required checks
+  const isVerifiedOnChain = Boolean(
+    r.tx_hash &&
+    (
+      r.verified_on_chain === true ||
+      r.verified_on_chain_provenance === true ||
+      (r.verification_result && r.verification_result.verified === true)
+    )
+  );
+
   const statusLabel = isDemo
     ? 'DEMO / SIMULATED'
-    : r.is_verified_on_chain || r.on_chain_verified
+    : isVerifiedOnChain
     ? 'On-Chain Verified'
     : r.tx_hash && (r.status === 'CONFIRMED' || r.status === 'ANCHORED')
     ? (network.short_name ? `Anchored on ${network.short_name}` : 'Anchored on-chain')
@@ -91,7 +101,7 @@ export function formatBlockchainRecord(r) {
 
   const statusCode = isDemo
     ? 'DEMO_SIMULATED'
-    : r.is_verified_on_chain || r.on_chain_verified
+    : isVerifiedOnChain
     ? 'VERIFIED_ON_CHAIN'
     : r.tx_hash && (r.status === 'CONFIRMED' || r.status === 'ANCHORED')
     ? 'ANCHORED'
@@ -261,17 +271,26 @@ export function getBlockchainRecord(identifier, isDemo = isDemoModeEnabled) {
  * @returns {Object}
  */
 export function getBlockchainStats() {
-  const realRecords = cachedRecords.filter((r) => !r.isDemo && !r.isSimulated && r.status !== 'DEMO_SIMULATED');
+  const realRecords = cachedRecords.filter((r) => !r.isDemo && !r.isSimulated && r.statusCode !== 'DEMO_SIMULATED');
+  const verifiedOnChainRecords = realRecords.filter((r) => r.statusCode === 'VERIFIED_ON_CHAIN');
   const totalCredits = realRecords.reduce((sum, r) => sum + (Number(r.tCO2e) || 0), 0);
 
   return {
     totalCreditsIssued: totalCredits >= 1000 ? `${(totalCredits / 1000).toFixed(1)}k` : `${totalCredits}`,
-    totalCreditsIssuedChange: realRecords.length > 0 ? 'Verified on Polygon Amoy' : '0 registered',
+    totalCreditsIssuedChange: verifiedOnChainRecords.length > 0
+      ? `${verifiedOnChainRecords.length} Verified on-chain`
+      : realRecords.length > 0
+      ? `${realRecords.length} Anchored on-chain`
+      : '0 registered',
     totalCO2eTokenized: totalCredits >= 1000 ? `${(totalCredits / 1000).toFixed(1)}k` : `${totalCredits}`,
-    activeNetworksCount: realRecords.length > 0 ? 1 : 0,
-    verifiedProjectsCount: realRecords.length,
+    activeNetworksCount: realRecords.filter((r) => r.network && r.network !== 'Network Not Configured').length > 0 ? 1 : 0,
+    verifiedProjectsCount: verifiedOnChainRecords.length,
     blockchainTxnsCount: `${realRecords.filter((r) => r.txHash).length}`,
-    lastSynced: realRecords.length > 0 ? 'Polygon Amoy synchronized' : 'Awaiting on-chain records',
+    lastSynced: verifiedOnChainRecords.length > 0
+      ? 'Polygon Amoy synchronized'
+      : realRecords.length > 0
+      ? 'Awaiting on-chain verification'
+      : 'Awaiting on-chain records',
   };
 }
 

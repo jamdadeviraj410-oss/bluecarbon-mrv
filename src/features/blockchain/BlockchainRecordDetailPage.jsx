@@ -69,7 +69,7 @@ export default function BlockchainRecordDetailPage() {
             ) : record.txHash ? (
               <span className="px-3 py-0.5 rounded-full bg-secondary-container/30 text-on-secondary-container font-label-md flex items-center gap-1 border border-secondary-container">
                 <span className="material-symbols-outlined text-[16px]">verified</span>
-                <span>{record.status} on Polygon Amoy</span>
+                <span>{record.status}</span>
               </span>
             ) : (
               <span className="px-3 py-0.5 rounded-full bg-surface-variant text-on-surface-variant font-label-md flex items-center gap-1 border border-outline-variant">
@@ -81,7 +81,7 @@ export default function BlockchainRecordDetailPage() {
           <p className="font-body-md text-on-surface-variant max-w-3xl">
             {record.isDemo || record.isSimulated
               ? 'Demonstration carbon credit representation. Real on-chain anchoring is initiated via the anchorMRVSubmission edge function.'
-              : 'Cryptographically verified immutable proof of blue carbon sequestration on Polygon Amoy testnet.'}
+              : `Cryptographically verified immutable proof of blue carbon sequestration on ${record.networkFull && record.networkFull !== 'Network Not Configured' ? record.networkFull : 'configured blockchain network'}.`}
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-1">
             <span className="font-mono-data text-on-surface-variant px-2.5 py-1 bg-surface-container rounded text-xs">
@@ -256,7 +256,9 @@ export default function BlockchainRecordDetailPage() {
               </div>
 
               <div className="flex flex-col gap-1 sm:col-span-2">
-                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">Transaction Hash (Polygon Amoy)</span>
+                <span className="font-label-md text-outline uppercase tracking-wider text-[10px]">
+                  Transaction Hash {record.network && record.network !== 'Network Not Configured' ? `(${record.network})` : ''}
+                </span>
                 <div className="flex items-center gap-2 bg-surface/10 px-3 py-2 rounded-lg w-full justify-between">
                   <span className="text-inverse-on-surface truncate break-all">{record.txHash}</span>
                   <button
