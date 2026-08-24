@@ -211,5 +211,41 @@ export async function runBlockchainProvenanceTests() {
     assert(!stats.totalCreditsIssuedChange.includes('+14%'), 'Must not display fake +14% growth statistic');
   });
 
+  // Test 18: Semantic Integrity — Missing network does not default to Polygon Amoy
+  await recordTest('Semantic Integrity: Missing network does not default to Polygon Amoy', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({ id: 'rec-1' });
+    assert.strictEqual(formatted.network, 'Network Not Configured', 'Network must be Network Not Configured when missing');
+    assert.strictEqual(formatted.networkFull, 'Network Not Configured', 'NetworkFull must be Network Not Configured when missing');
+  });
+
+  // Test 19: Semantic Integrity — Missing chain ID does not default to 80002
+  await recordTest('Semantic Integrity: Missing chain ID does not default to 80002', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({ id: 'rec-1' });
+    assert.strictEqual(formatted.chainId, null, 'chainId must be null when network is not configured');
+  });
+
+  // Test 20: Semantic Integrity — Missing carbon quantity does not become 0
+  await recordTest('Semantic Integrity: Missing carbon quantity becomes null, not 0', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({ id: 'rec-1', credit: {}, payload: {} });
+    assert.strictEqual(formatted.tCO2e, null, 'tCO2e must be null when both issued_quantity and carbon_estimate are missing');
+  });
+
+  // Test 21: Semantic Integrity — tx hash + DB CONFIRMED does not claim VERIFIED_ON_CHAIN without independent verification
+  await recordTest('Semantic Integrity: tx hash + DB CONFIRMED does not claim VERIFIED_ON_CHAIN', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({
+      id: 'rec-1',
+      tx_hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      status: 'CONFIRMED',
+      network: { short_name: 'Polygon Amoy' },
+    });
+    assert.notStrictEqual(formatted.statusCode, 'VERIFIED_ON_CHAIN', 'Must not claim VERIFIED_ON_CHAIN without cryptographic verification');
+    assert.strictEqual(formatted.statusCode, 'ANCHORED', 'Must have ANCHORED status code');
+    assert.strictEqual(formatted.status, 'Anchored on Polygon Amoy', 'Must display Anchored on Polygon Amoy, not On-Chain Verified');
+  });
+
   return testResults;
 }

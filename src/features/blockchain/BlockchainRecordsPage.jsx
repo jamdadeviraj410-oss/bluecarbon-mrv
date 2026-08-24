@@ -365,7 +365,7 @@ export default function BlockchainRecordsPage() {
                           <div className="text-[12px] text-on-surface-variant">{record.organization}</div>
                         </td>
                         <td className="py-3.5 px-4 text-on-surface font-mono-data text-right font-medium">
-                          {formatNumber(record.tCO2e)}
+                          {record.tCO2e != null ? formatNumber(record.tCO2e) : <span className="text-xs text-on-surface-variant italic">Pending / Not Available</span>}
                         </td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           <div className="inline-flex items-center gap-1.5">
@@ -485,8 +485,14 @@ export default function BlockchainRecordsPage() {
               <div className="mt-4 bg-surface p-3 rounded-lg border border-surface-container-high flex items-center justify-between">
                 <span className="font-body-md text-on-surface-variant text-sm">Quantity Verified</span>
                 <span className="font-title-lg text-secondary font-mono-data text-base font-bold">
-                  {formatNumber(selectedRecord.tCO2e)}{' '}
-                  <span className="text-[12px] text-on-surface-variant font-body-md font-normal">tCO2e</span>
+                  {selectedRecord.tCO2e != null ? (
+                    <>
+                      {formatNumber(selectedRecord.tCO2e)}{' '}
+                      <span className="text-[12px] text-on-surface-variant font-body-md font-normal">tCO2e</span>
+                    </>
+                  ) : (
+                    <span className="text-xs text-on-surface-variant font-normal italic">Pending / Not Available</span>
+                  )}
                 </span>
               </div>
             </div>
@@ -658,7 +664,9 @@ export default function BlockchainRecordsPage() {
                 </div>
                 <div className="bg-surface-container p-3 rounded-lg flex flex-col gap-1">
                   <span className="text-outline uppercase text-[10px]">Carbon Volume</span>
-                  <span className="text-secondary font-bold">{formatNumber(selectedRecord.tCO2e)} tCO2e</span>
+                  <span className="text-secondary font-bold">
+                    {selectedRecord.tCO2e != null ? `${formatNumber(selectedRecord.tCO2e)} tCO2e` : 'Pending / Not Available'}
+                  </span>
                 </div>
                 <div className="bg-surface-container p-3 rounded-lg flex flex-col gap-1">
                   <span className="text-outline uppercase text-[10px]">Auditor</span>

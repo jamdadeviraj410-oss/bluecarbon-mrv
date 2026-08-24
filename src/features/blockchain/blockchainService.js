@@ -51,6 +51,13 @@ export function formatBlockchainRecord(r) {
   const contract = r.contract || {};
   const events = (credit.lifecycle_events || []).sort((a, b) => a.step_number - b.step_number);
 
+  const carbonValue =
+    credit.issued_quantity != null
+      ? Number(credit.issued_quantity)
+      : r.payload?.carbon_estimate != null
+      ? Number(r.payload.carbon_estimate)
+      : null;
+
   const isDemo = Boolean(r.isDemo || r.isSimulated || r.status === 'DEMO_SIMULATED');
 
   const txShort = r.tx_hash
@@ -62,31 +69,52 @@ export function formatBlockchainRecord(r) {
     ? `${contractAddress.slice(0, 6)}...${contractAddress.slice(-4)}`
     : null;
 
+  const networkShort = network.short_name || network.name || 'Network Not Configured';
+  const networkFull = network.name || 'Network Not Configured';
+  const chainId = network.chain_id ?? null;
+  const networkSymbol = network.symbol ?? null;
+  const networkColor = network.color ?? '#6c757d';
+
   const statusLabel = isDemo
     ? 'DEMO / SIMULATED'
-    : r.tx_hash && r.status === 'CONFIRMED'
-    ? 'Confirmed'
+    : r.is_verified_on_chain || r.on_chain_verified
+    ? 'On-Chain Verified'
+    : r.tx_hash && (r.status === 'CONFIRMED' || r.status === 'ANCHORED')
+    ? (network.short_name ? `Anchored on ${network.short_name}` : 'Anchored on-chain')
+    : r.status === 'ANCHORING'
+    ? 'Anchoring'
     : r.status === 'PENDING' || !r.tx_hash
     ? 'Pending'
     : r.status === 'FAILED'
     ? 'Failed'
     : 'Pending';
 
+  const statusCode = isDemo
+    ? 'DEMO_SIMULATED'
+    : r.is_verified_on_chain || r.on_chain_verified
+    ? 'VERIFIED_ON_CHAIN'
+    : r.tx_hash && (r.status === 'CONFIRMED' || r.status === 'ANCHORED')
+    ? 'ANCHORED'
+    : r.status === 'ANCHORING'
+    ? 'ANCHORING'
+    : r.status === 'FAILED'
+    ? 'FAILED'
+    : 'PENDING';
+
   const creditId = credit.credit_code || r.credit_id || r.record_code || 'Pending';
   const provenanceId = credit.credit_code || creditId;
-  const tCO2e = Number(credit.issued_quantity) || Number(r.payload?.carbon_estimate) || 0;
   const mrvCode = r.payload?.record_id || credit.mrv_submission_code || 'Pending';
   const dataHash = r.data_hash || r.merkle_root || r.payload?.data_hash || null;
   const explorerUrl = r.explorer_url || (r.tx_hash && network.explorer_url ? `${network.explorer_url}/tx/${r.tx_hash}` : null);
 
   const dnaTrace = [
-    { type: 'Credit', code: provenanceId, label: tCO2e > 0 ? `${tCO2e.toLocaleString()} tCO2e Issued` : 'Pending Issuance' },
+    { type: 'Credit', code: provenanceId, label: carbonValue != null ? `${carbonValue.toLocaleString()} tCO2e Issued` : 'Pending / Not Available' },
     { type: 'Project', code: project.project_code || project.name || 'Pending', label: project.name || 'Coastal Restoration Project' },
     { type: 'MRV', code: mrvCode, label: mrvCode !== 'Pending' ? 'Verified MRV Package' : 'Pending MRV Submission' },
     { type: 'Verification', code: credit.verification_reference || 'Pending', label: credit.verifier_signatory || 'Pending Verifier' },
     { type: 'Evidence', code: r.payload?.evidence_count ? `${r.payload.evidence_count} Files` : (r.payload?.evidence_hashes?.length ? `${r.payload.evidence_hashes.length} Files` : 'Pending Files'), label: 'Cryptographic Evidence Hashes' },
     { type: 'Hash', code: dataHash ? `0x${dataHash.slice(0, 8)}...` : 'Pending Hash', label: 'Canonical SHA-256 Digest' },
-    { type: 'Polygon', code: r.tx_hash ? `Amoy ${r.block_number ? `#${r.block_number}` : ''}` : 'Pending On-Chain Anchor', label: r.tx_hash ? 'Polygon Amoy Blockchain' : 'Awaiting Smart Contract Anchor' },
+    { type: 'Polygon', code: r.tx_hash ? `${network.short_name || 'Blockchain'} ${r.block_number ? `#${r.block_number}` : ''}` : 'Pending On-Chain Anchor', label: r.tx_hash ? `${networkFull}` : 'Awaiting Smart Contract Anchor' },
   ];
 
   return {
@@ -100,12 +128,12 @@ export function formatBlockchainRecord(r) {
     mrvId: r.payload?.submission_id || 'Pending',
     organization: org.name || 'Not Available',
     location: project.location_name || 'Coastal Region',
-    tCO2e,
-    network: network.short_name || 'Polygon Amoy',
-    networkFull: network.name || 'Polygon Amoy Testnet',
-    networkSymbol: network.symbol || 'POL',
-    networkColor: network.color || '#8247E5',
-    chainId: network.chain_id || 80002,
+    tCO2e: carbonValue,
+    network: networkShort,
+    networkFull,
+    networkSymbol,
+    networkColor,
+    chainId,
     txHash: r.tx_hash || null,
     txHashShort: txShort,
     contractAddress,
@@ -117,9 +145,10 @@ export function formatBlockchainRecord(r) {
       ? new Date(r.on_chain_timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
       : 'Pending',
     status: statusLabel,
+    statusCode,
     confirmations: r.confirmations ?? null,
     confirmationsTotal: r.confirmations_total ?? null,
-    methodology: credit.methodology || 'VM0033 Tidal Wetland',
+    methodology: credit.methodology || 'Standard Blue Carbon MRV',
     verificationId: credit.verification_reference || null,
     auditor: credit.verifier_signatory || 'Pending Verifier',
     gasUsed: r.gas_used ?? null,

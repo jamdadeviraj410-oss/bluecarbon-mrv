@@ -165,8 +165,14 @@ export default function BlockchainRecordDetailPage() {
         <div className="bg-surface-container-lowest p-5 rounded-xl shadow-sm border-t-4 border-secondary flex flex-col gap-2 relative overflow-hidden">
           <span className="font-label-md text-on-surface-variant uppercase tracking-wider block text-[11px]">CO2e Volume Minted</span>
           <div className="flex items-end gap-2">
-            <span className="font-headline-lg text-on-surface font-mono-data">{formatNumber(record.tCO2e)}</span>
-            <span className="font-title-md text-on-surface-variant pb-1">tCO2e</span>
+            {record.tCO2e != null ? (
+              <>
+                <span className="font-headline-lg text-on-surface font-mono-data">{formatNumber(record.tCO2e)}</span>
+                <span className="font-title-md text-on-surface-variant pb-1">tCO2e</span>
+              </>
+            ) : (
+              <span className="font-title-md text-on-surface-variant italic py-1">Pending / Not Available</span>
+            )}
           </div>
           <div className="flex items-center gap-1 text-secondary text-xs font-semibold">
             <span className="material-symbols-outlined text-[16px]">trending_up</span> Verified Sequestered
@@ -397,7 +403,9 @@ export default function BlockchainRecordDetailPage() {
                 </div>
                 <div className="p-3 bg-surface-container rounded-lg flex flex-col gap-1">
                   <span className="text-label-md text-on-surface-variant uppercase text-[10px]">Carbon Volume</span>
-                  <span className="font-body-md text-secondary font-bold truncate">{formatNumber(record.tCO2e)} tCO2e</span>
+                  <span className="font-body-md text-secondary font-bold truncate">
+                    {record.tCO2e != null ? `${formatNumber(record.tCO2e)} tCO2e` : 'Pending / Not Available'}
+                  </span>
                 </div>
               </div>
             </div>
