@@ -3,12 +3,12 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 
-export function runBlockchainProvenanceTests() {
+export async function runBlockchainProvenanceTests() {
   const testResults = [];
 
-  function recordTest(name, fn) {
+  async function recordTest(name, fn) {
     try {
-      fn();
+      await fn();
       testResults.push({ name, passed: true });
     } catch (err) {
       testResults.push({ name, passed: false, error: err.message });
@@ -28,7 +28,7 @@ export function runBlockchainProvenanceTests() {
   }
 
   // Test 1: Deterministic Canonical JSON
-  recordTest('Deterministic Canonical JSON (Key order independence)', () => {
+  await recordTest('Deterministic Canonical JSON (Key order independence)', () => {
     const payloadA = {
       submission: {
         id: '123e4567-e89b-12d3-a456-426614174000',
@@ -72,7 +72,7 @@ export function runBlockchainProvenanceTests() {
   });
 
   // Test 2: Tamper Detection (Altered Carbon Estimate)
-  recordTest('Tamper Detection on altered carbon estimate', () => {
+  await recordTest('Tamper Detection on altered carbon estimate', () => {
     const payloadA = {
       submission: { id: '1', carbon_estimate: 1250.0 },
       evidence: [{ id: '1', sha256_hash: 'abc' }],
@@ -85,7 +85,7 @@ export function runBlockchainProvenanceTests() {
   });
 
   // Test 3: Solidity Contract Signatures
-  recordTest('Solidity contract signatures in BlueCarbonMRVAnchor.sol', () => {
+  await recordTest('Solidity contract signatures in BlueCarbonMRVAnchor.sol', () => {
     const contractPath = path.resolve('contracts', 'BlueCarbonMRVAnchor.sol');
     const contractSource = fs.readFileSync(contractPath, 'utf8');
     assert(contractSource.includes('function anchorMRV('), 'Must contain anchorMRV');
@@ -96,7 +96,7 @@ export function runBlockchainProvenanceTests() {
   });
 
   // Test 4: Edge functions integrity
-  recordTest('Edge functions existence & absence of fake generators', () => {
+  await recordTest('Edge functions existence & absence of fake generators', () => {
     const anchorFnPath = path.resolve('supabase', 'functions', 'anchor-mrv', 'index.ts');
     const verifyFnPath = path.resolve('supabase', 'functions', 'verify-mrv', 'index.ts');
     assert(fs.existsSync(anchorFnPath), 'anchor-mrv index.ts must exist');
@@ -106,21 +106,21 @@ export function runBlockchainProvenanceTests() {
   });
 
   // Test 5: Negative Test — Non-VERIFIED MRV Rejection
-  recordTest('Negative Test: Non-VERIFIED MRV rejection in anchor logic', () => {
+  await recordTest('Negative Test: Non-VERIFIED MRV rejection in anchor logic', () => {
     const anchorFnPath = path.resolve('supabase', 'functions', 'anchor-mrv', 'index.ts');
     const anchorCode = fs.readFileSync(anchorFnPath, 'utf8');
     assert(anchorCode.includes('status !== \'VERIFIED\''), 'Must strictly reject non-VERIFIED MRV submissions');
   });
 
   // Test 6: Negative Test — Missing server configuration results in safe failure
-  recordTest('Negative Test: Missing blockchain credentials returns safe error', () => {
+  await recordTest('Negative Test: Missing blockchain credentials returns safe error', () => {
     const anchorFnPath = path.resolve('supabase', 'functions', 'anchor-mrv', 'index.ts');
     const anchorCode = fs.readFileSync(anchorFnPath, 'utf8');
     assert(anchorCode.includes('Blockchain server configuration is incomplete'), 'Must return 500 configuration error');
   });
 
   // Test 7: Negative Test — Changed evidence hash alters canonical digest
-  recordTest('Negative Test: Changed evidence file hash alters canonical digest', () => {
+  await recordTest('Negative Test: Changed evidence file hash alters canonical digest', () => {
     const payloadOrig = {
       submission: { id: 'SUB-1', code: 'MRV-01', status: 'VERIFIED' },
       evidence: [{ id: 'E1', sha256_hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }],
@@ -135,10 +135,80 @@ export function runBlockchainProvenanceTests() {
   });
 
   // Test 8: Negative Test — Verification function returns false when anchor absent
-  recordTest('Negative Test: On-chain absence returns verified: false', () => {
+  await recordTest('Negative Test: On-chain absence returns verified: false', () => {
     const verifyFnPath = path.resolve('supabase', 'functions', 'verify-mrv', 'index.ts');
     const verifyCode = fs.readFileSync(verifyFnPath, 'utf8');
     assert(verifyCode.includes('verified: false'), 'Must return verified: false on missing or mismatched anchor');
+  });
+
+  // Test 9: Data Integrity — formatBlockchainRecord uses null for missing blockNumber
+  await recordTest('Data Integrity: Missing block_number produces null, not fake default', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({ id: 'rec-1', status: 'PENDING' });
+    assert.strictEqual(formatted.blockNumber, null, 'blockNumber must be null when not present in database record');
+  });
+
+  // Test 10: Data Integrity — formatBlockchainRecord uses null for missing confirmations
+  await recordTest('Data Integrity: Missing confirmations produces null, not fake default', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({ id: 'rec-1', status: 'PENDING' });
+    assert.strictEqual(formatted.confirmations, null, 'confirmations must be null when not present in database record');
+  });
+
+  // Test 11: Data Integrity — formatBlockchainRecord uses null for missing contract_address
+  await recordTest('Data Integrity: Missing contract_address produces null, not fake default', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({ id: 'rec-1', status: 'PENDING' });
+    assert.strictEqual(formatted.contractAddress, null, 'contractAddress must be null when not configured');
+    assert.strictEqual(formatted.contractAddressShort, null, 'contractAddressShort must be null when not configured');
+  });
+
+  // Test 12: Data Integrity — formatBlockchainRecord uses Pending Anchor for missing tx_hash
+  await recordTest('Data Integrity: Missing tx_hash produces Pending Anchor', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({ id: 'rec-1', status: 'PENDING', tx_hash: null });
+    assert.strictEqual(formatted.txHashShort, 'Pending Anchor', 'txHashShort must indicate Pending Anchor');
+    assert.strictEqual(formatted.explorerUrl, null, 'explorerUrl must be null when tx_hash is absent');
+  });
+
+  // Test 13: Data Integrity — Confirmed status strictly requires real tx_hash
+  await recordTest('Data Integrity: Status CONFIRMED without tx_hash reverts to Pending', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({ id: 'rec-1', status: 'CONFIRMED', tx_hash: null });
+    assert.strictEqual(formatted.status, 'Pending', 'Status must not claim Confirmed without tx_hash');
+  });
+
+  // Test 14: Data Integrity — Empty lifecycle_events produces empty array
+  await recordTest('Data Integrity: No fake lifecycle events generated', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({ id: 'rec-1', credit: { lifecycle_events: [] } });
+    assert(Array.isArray(formatted.lifecycle), 'lifecycle must be an array');
+    assert.strictEqual(formatted.lifecycle.length, 0, 'lifecycle must be empty when no events exist in database');
+  });
+
+  // Test 15: Data Integrity — Empty evidence hashes produces empty array
+  await recordTest('Data Integrity: No fake evidence hashes generated', async () => {
+    const { formatBlockchainRecord } = await import('../features/blockchain/blockchainService.js');
+    const formatted = formatBlockchainRecord({ id: 'rec-1', payload: {} });
+    assert(Array.isArray(formatted.evidenceHashes), 'evidenceHashes must be an array');
+    assert.strictEqual(formatted.evidenceHashes.length, 0, 'evidenceHashes must be empty when no hashes exist');
+  });
+
+  // Test 16: Data Integrity — Unknown credit ID returns null
+  await recordTest('Data Integrity: getBlockchainRecord returns null for unknown ID', async () => {
+    const { getBlockchainRecord, setBlockchainDemoMode } = await import('../features/blockchain/blockchainService.js');
+    setBlockchainDemoMode(false);
+    const result = getBlockchainRecord('NONEXISTENT_IDENTIFIER_12345');
+    assert.strictEqual(result, null, 'Must return null for unknown identifier instead of defaulting to first record');
+  });
+
+  // Test 17: Data Integrity — Production getBlockchainStats excludes demo records
+  await recordTest('Data Integrity: getBlockchainStats strictly excludes demo records', async () => {
+    const { getBlockchainStats, setBlockchainDemoMode } = await import('../features/blockchain/blockchainService.js');
+    setBlockchainDemoMode(false);
+    const stats = getBlockchainStats();
+    assert.strictEqual(typeof stats.totalCreditsIssued, 'string');
+    assert(!stats.totalCreditsIssuedChange.includes('+14%'), 'Must not display fake +14% growth statistic');
   });
 
   return testResults;

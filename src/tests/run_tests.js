@@ -31,7 +31,7 @@ async function main() {
   // 2. Blockchain Provenance Tests
   console.log('\n--- 2. BLOCKCHAIN PROVENANCE & CANONICAL HASH SUITE ---');
   try {
-    const results2 = runBlockchainProvenanceTests();
+    const results2 = await runBlockchainProvenanceTests();
     results2.forEach((r, idx) => {
       if (r.passed) {
         console.log(`  [PASS] 2.${idx + 1} ${r.name}`);

@@ -1,9 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   getBlockchainRecords,
   getBlockchainStats,
   exportBlockchainRegistryCSV,
+  isBlockchainDemoMode,
+  setBlockchainDemoMode,
+  fetchBlockchainRecordsFromSupabase,
 } from './blockchainService';
 import { truncateHash, formatNumber } from '../../utils/formatters';
 
@@ -13,25 +16,40 @@ export default function BlockchainRecordsPage() {
   const [selectedNetwork, setSelectedNetwork] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedRecordId, setSelectedRecordId] = useState('BC-MH-2026-000184');
+  const [selectedRecordId, setSelectedRecordId] = useState(null);
   const [copiedHash, setCopiedHash] = useState(null);
   const [copiedContract, setCopiedContract] = useState(false);
   const [copiedPanelHash, setCopiedPanelHash] = useState(false);
   const [showDnaModal, setShowDnaModal] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(isBlockchainDemoMode());
+  const [isLoading, setIsLoading] = useState(true);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-  const stats = useMemo(() => getBlockchainStats(), []);
+  useEffect(() => {
+    fetchBlockchainRecordsFromSupabase().finally(() => {
+      setIsLoading(false);
+    });
+  }, []);
+
+  const stats = useMemo(() => {
+    return getBlockchainStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemoMode, isLoading]);
 
   const filteredRecords = useMemo(() => {
-    return getBlockchainRecords({
-      search: searchTerm,
-      network: selectedNetwork,
-      status: selectedStatus,
-    });
-  }, [searchTerm, selectedNetwork, selectedStatus]);
+    return getBlockchainRecords(
+      {
+        search: searchTerm,
+        network: selectedNetwork,
+        status: selectedStatus,
+      },
+      isDemoMode
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, selectedNetwork, selectedStatus, isDemoMode, isLoading]);
 
   const totalPages = Math.ceil(filteredRecords.length / pageSize) || 1;
   const paginatedRecords = useMemo(() => {
@@ -40,14 +58,23 @@ export default function BlockchainRecordsPage() {
   }, [filteredRecords, currentPage]);
 
   const selectedRecord = useMemo(() => {
-    return (
-      filteredRecords.find((r) => r.creditId === selectedRecordId || r.provenanceId === selectedRecordId) ||
-      filteredRecords[0] ||
-      getBlockchainRecords()[0]
-    );
+    if (selectedRecordId) {
+      const match = filteredRecords.find((r) => r.creditId === selectedRecordId || r.provenanceId === selectedRecordId);
+      if (match) return match;
+    }
+    return filteredRecords[0] || null;
   }, [filteredRecords, selectedRecordId]);
 
+  const handleToggleDemoMode = () => {
+    const next = !isDemoMode;
+    setIsDemoMode(next);
+    setBlockchainDemoMode(next);
+    setCurrentPage(1);
+    setSelectedRecordId(null);
+  };
+
   const handleCopy = (text, type = 'hash') => {
+    if (!text) return;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
     }
@@ -97,6 +124,23 @@ export default function BlockchainRecordsPage() {
 
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          {/* Explicit Demo Mode Toggle Button */}
+          <button
+            type="button"
+            onClick={handleToggleDemoMode}
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-title-md text-xs transition-colors cursor-pointer border shadow-sm ${
+              isDemoMode
+                ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/50 hover:bg-amber-500/20'
+                : 'bg-surface-container text-on-surface-variant border-outline-variant/40 hover:bg-surface-container-high'
+            }`}
+            title="Toggle between live database and demo datasets"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              {isDemoMode ? 'science' : 'labs'}
+            </span>
+            <span>{isDemoMode ? 'Demo Mode Active' : 'Switch to Demo Dataset'}</span>
+          </button>
+
           <div className="relative flex-1 sm:flex-initial">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
             <input
@@ -133,6 +177,26 @@ export default function BlockchainRecordsPage() {
           </button>
         </div>
       </div>
+
+      {/* Demo Mode Notice Banner */}
+      {isDemoMode && (
+        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-start justify-between gap-3 animate-fadeIn">
+          <div className="flex items-start gap-2.5">
+            <span className="material-symbols-outlined text-[20px] text-amber-600 shrink-0">science</span>
+            <div>
+              <span className="font-bold uppercase tracking-wider text-[11px] block mb-0.5">Explicit Demo Dataset Mode Active</span>
+              Viewing simulated reference records for demonstration. These records are not recorded in the production Supabase database. Click "Switch to Demo Dataset" again to return to live registry records.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleDemoMode}
+            className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 dark:text-amber-200 rounded font-semibold text-[11px] whitespace-nowrap cursor-pointer"
+          >
+            Switch to Live Data
+          </button>
+        </div>
+      )}
 
       {/* Filter Dropdown Bar */}
       {showFilters && (
