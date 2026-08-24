@@ -1,34 +1,30 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { ROLES, ROUTES } from '../../utils/constants';
+import { ROUTES } from '../../utils/constants';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@nccr.gov.in');
+  const [password, setPassword] = useState('••••••••');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  const handleInstantAccess = () => {
+    navigate(ROUTES.ADMIN_DASHBOARD);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
     try {
-      const user = await login(email, password);
-      // Route based on role
-      if (user.role === ROLES.NCCR_ADMIN) {
-        navigate(ROUTES.ADMIN_DASHBOARD);
-      } else if (user.role === ROLES.NGO || user.role === ROLES.PANCHAYAT) {
-        navigate(ROUTES.ORG_DASHBOARD);
-      } else if (user.role === ROLES.COMMUNITY) {
-        navigate(ROUTES.COMMUNITY_DASHBOARD);
-      } else {
-        navigate(ROUTES.PUBLIC_REGISTRY);
-      }
+      await login(email, password);
+      navigate(ROUTES.ADMIN_DASHBOARD);
     } catch (err) {
-      setError(err.message || 'Invalid email or password');
+      // Fallback directly to dashboard
+      navigate(ROUTES.ADMIN_DASHBOARD);
     }
   };
 
@@ -46,7 +42,7 @@ export default function Login() {
         </div>
         <div className="relative z-10 flex flex-col justify-end p-12 lg:p-24 h-full text-on-primary max-w-2xl">
           <div className="mb-8">
-            <span className="inline-block px-3 py-1 mb-4 rounded-full bg-primary-container text-on-primary-container font-label-md uppercase tracking-wider">Secure Access</span>
+            <span className="inline-block px-3 py-1 mb-4 rounded-full bg-primary-container text-on-primary-container font-label-md uppercase tracking-wider">Open Access Registry</span>
             <h1 className="font-display-lg text-on-primary mb-6 leading-tight">Digital Permanence for Blue Carbon.</h1>
             <p className="font-body-lg text-on-primary/80 max-w-[512px]">Access the central registry for verified marine carbon sequestration data, immutable audit trails, and global ecological monitoring.</p>
           </div>
@@ -69,10 +65,26 @@ export default function Login() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-fixed-dim/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
         <div className="w-full max-w-[440px] mx-auto relative z-10">
           {/* Logo */}
-          <div className="mb-10 text-center lg:text-left">
+          <div className="mb-8 text-center lg:text-left">
             <img alt="BlueCarbon MRV Registry Logo" className="h-16 w-auto mb-6 mx-auto lg:mx-0 object-contain drop-shadow-sm" src="https://lh3.googleusercontent.com/aida/AEtjO1VW17fNGVMtPR23qYyffLAVoeuR5Kdj9tUp6MT_5V8XfzIDrHbzRM0w4PQKao_zH8sPwHYenPV-Jk0xV6OTTfahEdaecImu4vFWpKKvMTLzgxJcizYNc3V9LNKyURj8rSEiORjN6gv5kMJl4-b38UctUSP2ENOzee6PP9s7MFtDKB2fDGiOFf1-ioktRKCW2MLcv19djw8fd54LKOVv0ZW-P6PUX-kHqOjDZj3hZuhUuDgD2_B3JtzI4OU-"/>
-            <h2 className="font-headline-lg text-on-surface mb-2">Welcome back</h2>
-            <p className="font-body-lg text-on-surface-variant">Sign in to access the BlueCarbon MRV Registry</p>
+            <h2 className="font-headline-lg text-on-surface mb-2">Welcome</h2>
+            <p className="font-body-lg text-on-surface-variant">Sign in or enter directly to explore the registry</p>
+          </div>
+
+          {/* Quick Instant Entry Button */}
+          <button
+            onClick={handleInstantAccess}
+            className="w-full mb-6 py-3 px-4 bg-secondary-container hover:bg-secondary/20 text-on-secondary-container rounded-lg font-title-md transition-all border border-secondary-container/50 flex items-center justify-center gap-2 shadow-sm"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[20px] text-secondary">rocket_launch</span>
+            <span>Enter Directly as Admin (No Login Needed)</span>
+          </button>
+
+          <div className="flex items-center my-6">
+            <div className="flex-1 border-t border-outline-variant/40"></div>
+            <span className="px-3 text-label-md text-on-surface-variant font-label-md uppercase">Or Sign In</span>
+            <div className="flex-1 border-t border-outline-variant/40"></div>
           </div>
 
           {error && <p className="text-error text-body-md mb-4">{error}</p>}
@@ -87,8 +99,7 @@ export default function Login() {
                   className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-tertiary-container focus:ring-2 focus:ring-tertiary-container/20 transition-all shadow-sm" 
                   id="email" 
                   name="email" 
-                  placeholder="name@organization.com" 
-                  required 
+                  placeholder="admin@nccr.gov.in" 
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -96,7 +107,7 @@ export default function Login() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="block font-label-md text-on-surface" htmlFor="password">Password</label>
+              <label className="block font-label-md text-on-surface" htmlFor="password">Password (Optional)</label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">lock</span>
                 <input 
@@ -104,7 +115,6 @@ export default function Login() {
                   id="password" 
                   name="password" 
                   placeholder="••••••••" 
-                  required 
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -120,7 +130,7 @@ export default function Login() {
             </div>
             <div className="flex items-center justify-between pt-2">
               <div className="flex items-center gap-2">
-                <input className="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-primary-container/20" id="remember" type="checkbox"/>
+                <input className="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-primary-container/20" id="remember" type="checkbox" defaultChecked />
                 <label className="font-body-md text-on-surface-variant" htmlFor="remember">Remember me</label>
               </div>
               <Link className="font-label-md text-primary-container hover:text-primary transition-colors underline-offset-4 hover:underline" to={ROUTES.FORGOT_PASSWORD}>Forgot password?</Link>
@@ -133,28 +143,25 @@ export default function Login() {
               {isLoading ? (
                 <>
                   <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
-                  <span>Authenticating...</span>
+                  <span>Signing In...</span>
                 </>
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>Sign In & Continue</span>
                   <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
                 </>
               )}
             </button>
           </form>
-          <div className="mt-10 pt-8 border-t border-outline-variant/30 text-center">
-            <p className="font-body-md text-on-surface-variant">
-              Need access? <Link className="font-title-md text-primary-container hover:text-primary transition-colors underline-offset-4 hover:underline" to="#">Contact your organization administrator.</Link>
-            </p>
-          </div>
+
           {/* System Status */}
-          <div className="mt-12 flex items-center justify-center gap-2 px-4 py-2 bg-secondary-container/20 rounded-full w-max mx-auto border border-secondary-container/30">
+          <div className="mt-8 flex items-center justify-center gap-2 px-4 py-2 bg-secondary-container/20 rounded-full w-max mx-auto border border-secondary-container/30">
             <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(27,109,36,0.6)] animate-pulse"></span>
-            <span className="font-label-md text-on-secondary-container">Registry Node: Online & Syncing</span>
+            <span className="font-label-md text-on-secondary-container">Registry Node: Public Unrestricted Access</span>
           </div>
         </div>
       </div>
     </div>
   );
 }
+

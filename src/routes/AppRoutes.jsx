@@ -31,7 +31,8 @@ export default function AppRoutes() {
       <Route path={ROUTES.LOGIN} element={<Login />} />
       <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
       <Route path={ROUTES.ACCESS_RESTRICTED} element={<AccessRestricted />} />
-      <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
+      <Route path="/" element={<Navigate to={ROUTES.ADMIN_DASHBOARD} replace />} />
+
 
       <Route element={<AdminLayout />}>
         <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />

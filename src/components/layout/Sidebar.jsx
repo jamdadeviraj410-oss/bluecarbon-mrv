@@ -23,7 +23,6 @@ export default function Sidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const isAdmin = user?.role === ROLES.NCCR_ADMIN;
   const isOrg = user?.role === ROLES.NGO || user?.role === ROLES.PANCHAYAT;
 
   const adminLinks = [
@@ -47,7 +46,7 @@ export default function Sidebar() {
     { icon: 'settings', label: 'Settings', to: ROUTES.ORG_SETTINGS },
   ];
 
-  const links = isAdmin ? adminLinks : isOrg ? orgLinks : [];
+  const links = isOrg ? orgLinks : adminLinks;
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[var(--sidebar-width)] bg-primary text-on-primary flex flex-col z-40 border-r border-outline/20">
@@ -80,8 +79,8 @@ export default function Sidebar() {
             <span className="material-symbols-outlined text-on-primary-container">person</span>
           </div>
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="font-title-md text-title-md truncate">{user?.name || 'User'}</span>
-            <span className="font-body-md text-label-md text-on-primary/70 truncate">{user?.organization}</span>
+            <span className="font-title-md text-title-md truncate">{user?.name || 'NCCR Admin'}</span>
+            <span className="font-body-md text-label-md text-on-primary/70 truncate">{user?.organization || 'National Centre for Coastal Research'}</span>
           </div>
         </div>
         <button
