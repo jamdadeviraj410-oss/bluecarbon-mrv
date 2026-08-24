@@ -68,7 +68,21 @@
   --color-status-draft-bg: #f3e5f5;
   --color-status-draft: #7b1fa2;
 
-  /* === Spacing === */
+  /* === Border Radius === */
+  --radius-sm: 0.25rem;
+  --radius-DEFAULT: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* === Typography Fonts === */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Fira Code", Consolas, monospace;
+}
+
+:root {
+  /* === Design Spacing Variables === */
   --spacing-base: 4px;
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -78,18 +92,7 @@
   --spacing-container-margin: 40px;
   --spacing-gutter: 20px;
 
-  /* === Border Radius === */
-  --radius-sm: 0.25rem;
-  --radius-DEFAULT: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-full: 9999px;
-
-  /* === Typography === */
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Code", "Fira Code", Consolas, monospace;
-
+  /* === Typography Scale Variables === */
   --text-display-lg: 48px;
   --text-display-lg--line-height: 56px;
   --text-display-lg--letter-spacing: -0.02em;
@@ -129,7 +132,7 @@
   --text-mono-data--line-height: 18px;
   --text-mono-data--font-weight: 400;
 
-  /* === Sidebar Width === */
+  /* === Layout Sidebar & Topbar === */
   --sidebar-width: 288px;
   --topbar-height: 64px;
 }
@@ -138,6 +141,15 @@
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 body {
